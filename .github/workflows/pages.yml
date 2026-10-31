@@ -20,11 +20,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
         working-directory: apps/web
       - name: Typecheck and build preview
         run: npm run typecheck && npm run test && npx vite build --mode pages
         working-directory: apps/web
+      - name: Verify preview is noindex and API-disconnected
+        working-directory: apps/web
+        run: |
+          grep -q 'content="noindex,nofollow"' dist/index.html
+          grep -q 'Disallow: /' dist/robots.txt
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
