@@ -35,7 +35,7 @@ class VehicleAdminController extends Controller {
  }
  public function upload(Request $request,Vehicle $vehicle) {
     abort_if($vehicle->archived_at,404);
-    $data=$request->validate(['photo'=>['required',File::image()->max('8mb')],'alt_text'=>['nullable','string','max:200']]);
+    $data=$request->validate(['photo'=>['required',File::types(['jpg','jpeg','png','webp'])->max('8mb')],'alt_text'=>['nullable','string','max:200']]);
     PhotoManager::add($vehicle,$data['photo'],$data['alt_text']??null);
     return back()->with('success','Vehicle photo added.');
  }

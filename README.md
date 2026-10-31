@@ -12,7 +12,7 @@
 | 3 — Conversion UX | About, Contact, Privacy preview, vehicle enquiry and viewing form designs (validation only) |
 | **4 — Backend** | **Laravel 13, PostgreSQL migrations, admin dashboard, real inventory and lead endpoints, photo management and backend tests** |
 | 5 — Integration | **Implemented:** Laravel-powered listings, customer lead capture (privacy-gated), status continuity, cross-system CI |
-| 6 — Release | **Pending:** production infrastructure, approved client content, SEO, legal privacy, and handover gates |
+| 6 — Release | **Code implementation:** production infrastructure templates, SEO, security, backup/restore, release gate and dependency locks. Real launch blocked pending client and hosting sign-off. |
 
 ### Repositories and apps
 
@@ -28,7 +28,7 @@ The preview is at [Carfolk LTD on GitHub Pages](https://sean-steve.github.io/Car
 ### Start the frontend
 ```bash
 cd apps/web
-npm install
+npm ci
 npm run dev
 npm run typecheck && npm run test && npm run build
 ```
@@ -39,6 +39,10 @@ See [Backend README](apps/api/README.md) for PostgreSQL Docker setup, Composer i
 ### Phase 5 cross-system integration
 
 The React frontend connects to Laravel using same-origin `/api/v1` and `/storage` paths (proxied by Vite locally). On real hosting, an HTTPS reverse proxy must route these paths to Laravel. `CARFOLK_LEADS_ENABLED` is disabled by default, and a valid Carfolk-approved `CARFOLK_PRIVACY_URL` is required to collect enquiries. See [Phase 5 integration](docs/PHASE_5_INTEGRATION.md) for evidence, browser tests and rollout limits.
+
+### Phase 6 launch controls
+
+Production Nginx, deployment scripts, SSL/SEO toggles, backup/restore tools and launch acceptance requirements are under [infra](infra/) and [Phase 6 Release](docs/PHASE_6_RELEASE.md). The project is **not publicly launched**: no Carfolk domain, server, approved inventory or privacy sign-off has been supplied. GitHub Pages stays noindex/disconnected. Both PHP and npm dependencies are locked and audited in CI.
 
 ### Model A documentation
 - [Delivery roadmap](docs/ROADMAP.md)
@@ -54,5 +58,5 @@ Carfolk must verify actual vehicles/photos/prices, business phone/WhatsApp/email
 
 ### Constraints
 - GitHub Pages cannot run Laravel or PostgreSQL.
-- React is **not yet integrated** with the live backend; Phase 5 is the integration gate.
+- React and Laravel are integrated in local/CI environments, but there is no public production server.
 - The project excludes public marketplace sellers, checkout, M-PESA, automated financing approvals, NTSA ownership transfer and native mobile applications.

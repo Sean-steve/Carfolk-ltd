@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Carfolk PostgreSQL dump
+
+[Timer]
+OnCalendar=*-*-* 02:15:00 UTC
+Persistent=true
+RandomizedDelaySec=10m
+Unit=carfolk-backup.service
+
+[Install]
+WantedBy=timers.target

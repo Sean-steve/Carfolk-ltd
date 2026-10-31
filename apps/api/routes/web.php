@@ -5,6 +5,11 @@ use App\Http\Controllers\Admin\VehicleAdminController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\SiteAdminController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SeoController;
+
+Route::get('/robots.txt',[SeoController::class,'robots']);
+Route::get('/sitemap.xml',[SeoController::class,'sitemap']);
+Route::get('/listing/{slug}',[SeoController::class,'listing']);
 
 Route::get('/', fn()=>redirect()->route('manage.dashboard'));
 Route::prefix('manage')->name('manage.')->group(function() {

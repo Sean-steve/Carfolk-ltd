@@ -51,8 +51,12 @@ php artisan test
 - Run `php artisan migrate --force` only after DB backups and migration approval.
 - Configure a private network PostgreSQL database, public uploads with `storage:link`, backups, PII retention and monitoring.
 - No production infrastructure or domain has been provisioned. Phase 5 removes active demonstration listings and connects the React app to the API in local and configured hosting; GitHub Pages is disconnected by default.
-- Commit a resolved `composer.lock` before production release to guarantee reproducible dependency versions.
+- The repository now includes composer.lock and package-lock.json for deterministic installs. Refresh them only via reviewed dependency changes.
 
 ## Phase 5 lead acceptance gate
 
 **Disabled by default.** Real public enquiries are accepted only when `CARFOLK_LEADS_ENABLED=true` and `CARFOLK_PRIVACY_URL` points to a client-approved policy. Never use the CI policy URL for production. `GET /api/v1/site` exposes the public flag and privacy URL; visitor forms remain disabled when approval is missing. Local same-origin web development uses Vite proxy on port 5173 to Laravel port 8000. CI browser tests use an isolated PostgreSQL database and test-only fixtures which are guarded against production execution.
+
+## Phase 6 release controls
+
+The API now provides server-rendered indexable listing pages at `/listing/{slug}`, a gated dynamic `/sitemap.xml`, and `/robots.txt`; search indexing is disabled by default. Privacy data retention is dry-run only unless both the approved policy and explicit execution are provided (`php artisan carfolk:privacy-prune` then `--execute`). Uploads are limited to JPEG, PNG and WebP; sensitive admin responses use no-store headers. See [Phase 6 docs](../../docs/PHASE_6_RELEASE.md) and [operator runbook](../../infra/docs/host-provisioning.md). Real production infrastructure, domain, policy, offsite backup and legal sign-off remain pending.

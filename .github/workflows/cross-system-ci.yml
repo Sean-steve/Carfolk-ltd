@@ -73,7 +73,7 @@ jobs:
       - name: Install frontend and Playwright
         working-directory: apps/web
         run: |
-          npm install --no-audit --no-fund
+          npm ci --no-audit --no-fund
           npx playwright install --with-deps chromium
       - name: Start website and confirm API is available
         working-directory: apps/web
