@@ -23,7 +23,7 @@ jobs:
       - run: npm install --no-audit --no-fund
         working-directory: apps/web
       - name: Typecheck and build preview
-        run: npm run typecheck && npx vite build --mode pages
+        run: npm run typecheck && npm run test && npx vite build --mode pages
         working-directory: apps/web
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
