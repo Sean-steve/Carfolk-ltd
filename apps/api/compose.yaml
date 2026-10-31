@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: carfolk
+      POSTGRES_USER: carfolk
+      POSTGRES_PASSWORD: ${CARFOLK_LOCAL_DB_PASSWORD:?Set CARFOLK_LOCAL_DB_PASSWORD in your shell first}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - carfolk_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carfolk -d carfolk"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  carfolk_pgdata:
