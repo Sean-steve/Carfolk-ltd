@@ -1,46 +1,54 @@
-# Carfolk LTD — Premium Digital Showroom
+# Carfolk LTD — Premium Dealership Website
 
-**Brand:** Quality & Affordability · **Package:** Model A · Own-inventory dealership website.
+**Business model:** Model A — own inventory only · **Brand:** Quality & Affordability.
 
-## Delivery state
-- **Phase 0:** React/TypeScript frontend foundation, reusable brand/components, design preview, CI and architecture documentation.
-- **Phase 1:** Reconstruct the approved landing-page design for Carfolk.
-- **Phase 2:** Vehicle catalogue/details, comparison and calculator.\n- **Phase 3:** Dedicated About, Contact and Privacy preview pages; enquiry/viewing UX with browser-only validation and configurable verified contact channels.
-- **Phase 4:** Laravel + PostgreSQL admin/inventory API.
-- **Phases 5–6:** Real integration, QA, SEO, security, deployment and handover.
+## Project status
 
-The current website is a **design-system preview**. It is not an operational vehicle-selling platform.
+| Phase | Result |
+|---|---|
+| 0 — Foundation | React/TypeScript design system, Carfolk logo and CI |
+| 1 — Landing | Branded landing page on GitHub Pages |
+| 2 — Discovery | Browse, filter, vehicle gallery, compare and financing estimates (demo cars) |
+| 3 — Conversion UX | About, Contact, Privacy preview, vehicle enquiry and viewing form designs (validation only) |
+| **4 — Backend** | **Laravel 13, PostgreSQL migrations, admin dashboard, real inventory and lead endpoints, photo management and backend tests** |
+| 5 — Integration | **Pending:** replace demo inventory with live API and connect form submissions; certify workflows |
+| 6 — Release | **Pending:** production infrastructure, SEO, real content and security/handover gates |
 
-## Start locally
+### Repositories and apps
+
+```
+apps/web/   React, TypeScript, Vite — GitHub Pages static frontend preview
+apps/api/   Laravel 13, PHP 8.3+, PostgreSQL 16 — backend and admin application
+docs/       Phase specifications, architecture, API/data contracts and certification notes
+.github/    Frontend CI, backend CI and static preview deployment
+```
+
+The preview is at [Carfolk LTD on GitHub Pages](https://sean-steve.github.io/Carfolk-ltd/). It is a **static preview, not the live sales platform**. The Laravel admin dashboard is available only when the backend runs on PHP-capable hosting.
+
+### Start the frontend
 ```bash
 cd apps/web
 npm install
 npm run dev
-# npm run typecheck
-# npm run build
+npm run typecheck && npm run test && npm run build
 ```
 
-## Repository
-```text
-apps/web/       Vite + React + TypeScript UI
-apps/api/       Planned Laravel API boundary (Phase 4)
-docs/           Product, architecture, data and design contracts
-.github/        Frontend CI and optional static Pages deployment
-```
+### Start the backend
+See [Backend README](apps/api/README.md) for PostgreSQL Docker setup, Composer installation, migrations, admin provisioning and server startup.
 
-## Preview hosting
-GitHub Pages may host the **static** frontend preview. It cannot host PHP/Laravel or PostgreSQL. Backend and production deployment are distinct deliverables.
-
-## Docs
-- [Model A scope](docs/MODEL_A_SCOPE.md)
-- [Roadmap](docs/ROADMAP.md)
+### Model A documentation
+- [Delivery roadmap](docs/ROADMAP.md)
+- [Backend Phase 4](docs/BACKEND_PHASE_4.md)
 - [Architecture](docs/ARCHITECTURE.md)
-- [Design system](docs/DESIGN_SYSTEM.md)
 - [API contract](docs/API_CONTRACT.md)
-- [Data model](docs/DATA_MODEL.md)
+- [Scope and exclusions](docs/MODEL_A_SCOPE.md)
+- [Design system](docs/DESIGN_SYSTEM.md)
+- [Phase 1](docs/PHASE_1_LANDING.md), [Phase 2](docs/PHASE_2_DISCOVERY.md), [Phase 3](docs/PHASE_3_CONVERSION.md)
 
-All displayed demo elements are illustrative only. Do not publish fictitious vehicles, prices, review scores, dealer statistics, or inventory as real.
+### Client data still required
+Carfolk must verify actual vehicles/photos/prices, business phone/WhatsApp/email, location, opening hours, and an approved production privacy notice. No fictitious stock, customers or business performance metrics should enter production.
 
-## Phase 3 business contact configuration
-
-See `apps/web/.env.example` and `docs/PHASE_3_CONVERSION.md`. All `VITE_CARFOLK_*` values are **public** and must contain only client-confirmed business information. No real contact data or test-drive forms are submitted on GitHub Pages.
+### Constraints
+- GitHub Pages cannot run Laravel or PostgreSQL.
+- React is **not yet integrated** with the live backend; Phase 5 is the integration gate.
+- The project excludes public marketplace sellers, checkout, M-PESA, automated financing approvals, NTSA ownership transfer and native mobile applications.

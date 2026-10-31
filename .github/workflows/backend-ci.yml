@@ -1,0 +1,74 @@
+name: Carfolk Backend — PostgreSQL Certification
+on:
+  push:
+    branches: [main, "phase/**"]
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/backend-ci.yml"
+permissions:
+  contents: read
+jobs:
+  laravel:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: carfolk
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: carfolk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U carfolk -d carfolk_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP 8.4 with PostgreSQL and image extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, pdo_pgsql, pgsql, gd, fileinfo, exif, dom, xml, curl, bcmath
+          coverage: none
+          tools: composer:v2
+      - name: Validate Composer manifest
+        run: composer validate --no-check-publish
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - name: Prepare testing runtime
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          php artisan package:discover --ansi
+          mkdir -p storage/framework/{sessions,views,cache/data} storage/logs bootstrap/cache
+      - name: Syntax-check PHP sources
+        run: find app bootstrap routes config database tests -name '*.php' -print0 | xargs -0 -n1 php -l > /tmp/carfolk-php-lint.txt
+      - name: PostgreSQL migration
+        run: php artisan migrate --force --no-interaction
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: carfolk_test
+          DB_USERNAME: carfolk
+          DB_PASSWORD: test-only-password
+      - name: Feature certification (PostgreSQL)
+        run: php artisan test --compact
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: carfolk_test
+          DB_USERNAME: carfolk
+          DB_PASSWORD: test-only-password
+          SESSION_DRIVER: array
+          CACHE_STORE: array
