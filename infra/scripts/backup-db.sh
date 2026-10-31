@@ -5,7 +5,9 @@ umask 077
 CONF="${CARFOLK_BACKUP_ENV:-/etc/carfolk/backup.env}"
 [[ -r "$CONF" ]] || { echo "Missing restricted DB backup credentials file" >&2; exit 1; }
 # shellcheck source=/dev/null
+set -a
 source "$CONF"
+set +a
 : "${PGHOST:?}" "${PGPORT:?}" "${PGUSER:?}" "${PGDATABASE:?}" "${PGPASSWORD:?}"
 BACKUP_ROOT="${CARFOLK_BACKUP_DIR:-/srv/carfolk/shared/backups}"
 mkdir -p "$BACKUP_ROOT"
@@ -14,7 +16,7 @@ flock -n 9 || { echo "Backup already active" >&2; exit 1; }
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 tmp="$BACKUP_ROOT/.carfolk-${stamp}.$$.dump"
 final="$BACKUP_ROOT/carfolk-${stamp}.dump"
-trap 'rm -f "$tmp"' EXIT
+trap 'rm -f "$tmp" "$tmp.sha256"' EXIT
 pg_dump --format=custom --no-owner --no-acl --file="$tmp"
 pg_restore --list "$tmp" > /dev/null
 sha256sum "$tmp" | sed "s|$tmp|$final|" > "$tmp.sha256"

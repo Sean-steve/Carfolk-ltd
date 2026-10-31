@@ -28,7 +28,10 @@ server {
     # REMOVE THE NEXT LINE ONLY after the signed launch gate is approved.
     add_header X-Robots-Tag "noindex, nofollow" always;
 
+    location ^~ /.well-known/acme-challenge/ { root /var/www/letsencrypt; }
+
     location ^~ /storage/ {
+        if ($uri !~* \\.(?:jpg|jpeg|png|webp)$) { return 404; }
         alias /srv/carfolk/shared/public-storage/;
         autoindex off;
         limit_except GET HEAD { deny all; }

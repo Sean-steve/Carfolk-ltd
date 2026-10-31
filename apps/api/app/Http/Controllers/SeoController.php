@@ -13,7 +13,7 @@ class SeoController extends Controller
         $url = rtrim((string) config('carfolk.public_url'), '/');
         $parts = parse_url($url);
         if (!is_array($parts) || ($parts['scheme'] ?? null) !== 'https' || empty($parts['host'])
-            || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])) {
+            || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment']) || !in_array($parts['path'] ?? '', ['', '/'], true)) {
             return null;
         }
         return $url;

@@ -46,7 +46,7 @@ class AdminApiController extends Controller {
  }
  public function upload(Request $request,Vehicle $vehicle): JsonResponse {
     abort_if($vehicle->archived_at,404);
-    $data=$request->validate(['photo'=>['required',File::image()->max('8mb')],'alt_text'=>['nullable','string','max:200']]);
+    $data=$request->validate(['photo'=>['required',File::types(['jpg','jpeg','png','webp'])->max('8mb')],'alt_text'=>['nullable','string','max:200']]);
     $image=PhotoManager::add($vehicle,$data['photo'],$data['alt_text']??null);
     return response()->json(['data'=>['id'=>$image->id,'url'=>\Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path)]],201);
  }

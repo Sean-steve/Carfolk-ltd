@@ -19,6 +19,7 @@ stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 release="$root/releases/$stamp"
 [[ ! -e "$release" ]] || { echo "Release directory exists" >&2; exit 1; }
 mkdir -p "$release" "$shared/public-storage" "$root/releases"
+[[ ! -e "$src/apps/api/.env" ]] || { echo 'Checkout contains an .env file; refusing to deploy copied secrets' >&2; exit 1; }
 cp -a "$src/." "$release/"
 ln -s "$shared/.env" "$release/apps/api/.env"
 images="$release/apps/api/storage/app/public"

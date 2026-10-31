@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 umask 077
-[[ $# -eq 1 && -f "$1" ]] || { echo 'Usage: restore-drill.sh /full/path/to/carf-YYYY.dump' >&2; exit 2; }
+[[ $# -eq 1 && -f "$1" ]] || { echo 'Usage: restore-drill.sh /full/path/to/carfolk-YYYY.dump' >&2; exit 2; }
 CONF="${CARFOLK_BACKUP_ENV:-/etc/carfolk/backup.env}"
 [[ -r "$CONF" ]] || exit 1
 # shellcheck source=/dev/null
+set -a
 source "$CONF"
+set +a
 : "${PGHOST:?}" "${PGPORT:?}" "${PGUSER:?}" "${PGPASSWORD:?}"
 # Never allow a drill target of the live DB. Requires separate CREATE DATABASE privileges.
 LIVE_DB="${PGDATABASE:?}"
