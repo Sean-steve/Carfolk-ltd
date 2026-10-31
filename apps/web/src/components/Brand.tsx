@@ -1,0 +1,1 @@
+export function Brand(){return <a className="brand" href="#top" aria-label="Carfolk LTD, back to top"><img src={import.meta.env.BASE_URL+'brand/carfolk-logo.webp'} alt="Carfolk LTD — Quality & Affordability" /></a>}
