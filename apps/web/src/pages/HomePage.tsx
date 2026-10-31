@@ -1,132 +1,67 @@
-import {useEffect,useMemo,useState} from 'react';
-import {useCompare} from '../state/CompareContext';
-
-import {ArrowDownRight,ArrowRight,ArrowUpRight,BadgeCheck,CalendarCheck,CarFront,CheckCircle2,ChevronRight,Clock3,GitCompareArrows,Headphones,Heart,Info,MapPin,MessageCircle,Search,ShieldCheck,SlidersHorizontal,Sparkles,X} from 'lucide-react';
-import {Header} from '../components/Header';
-import {Brand} from '../components/Brand';
-import {Button} from '../components/Button';
-import {VehicleSearch,type Criteria} from '../components/VehicleSearch';
-import {VehicleCard} from '../components/VehicleCard';
-import {FinanceEstimate} from '../components/FinanceEstimate';
-import {previewVehicles,type PreviewVehicle} from '../data/vehicles';
-
-function SectionHeading({eyebrow,title,description}:{eyebrow:string;title:string;description?:string}){
- return <div className="section-heading"><div><span className="eyebrow eyebrow--red">{eyebrow}</span><h2>{title}</h2></div>{description&&<p>{description}</p>}</div>
+import {useState,type FormEvent} from 'react';
+import {ArrowDownRight,ArrowRight,ArrowUpRight,CalendarCheck,CarFront,CheckCircle2,GitCompareArrows,Headphones,Info,MessageCircle,Search,ShieldCheck,SlidersHorizontal} from 'lucide-react';
+import {Shell} from '../components/Shell';
+import {ListingCard} from '../components/ListingCard';
+import {useOptions,useVehicles} from '../api/hooks';
+function Heading({eyebrow,title,description}:{eyebrow:string;title:string;description:string}){
+ return <div className="section-heading"><div><span className="eyebrow eyebrow--red">{eyebrow}</span><h2>{title}</h2></div><p>{description}</p></div>;
 }
 const values=[
- {icon:<ShieldCheck size={28}/>,title:'Quality at the forefront',text:'A confident way to explore options.'},
- {icon:<SlidersHorizontal size={28}/>,title:'Clear information',text:'Vehicle details, beautifully organized.'},
- {icon:<CalendarCheck size={28}/>,title:'Easy viewing requests',text:'Plan your visit with less hassle.'},
- {icon:<Headphones size={28}/>,title:'People-first support',text:'A simpler journey from interest to enquiry.'},
+ {icon:<ShieldCheck size={28}/>,title:'Quality at the forefront',text:'Clear details and a thoughtful buying journey.'},
+ {icon:<SlidersHorizontal size={28}/>,title:'Find what fits',text:'Filter verified listings by budget, model, and year.'},
+ {icon:<CalendarCheck size={28}/>,title:'Viewing requests',text:'Request a suitable time to inspect your choice.'},
+ {icon:<Headphones size={28}/>,title:'Dealership support',text:'Ask Carfolk for up-to-date vehicle information.'},
 ];
-const steps=[
- {number:'01',title:'Explore',text:'Discover vehicle options and narrow your search.'},
- {number:'02',title:'Compare',text:'Understand what makes each option different.'},
- {number:'03',title:'Enquire',text:'Reach out to learn more about a specific vehicle.'},
- {number:'04',title:'Visit',text:'Arrange a viewing before making your decision.'},
-];
-const blankCriteria:Criteria={make:'',model:'',budget:'',year:'',body:''};
-
 export default function HomePage(){
- const [criteria,setCriteria]=useState<Criteria>(blankCriteria);
- const {selected,toggleCompare:toggleSelected,clear}=useCompare();
- const [detail,setDetail]=useState<PreviewVehicle|null>(null);
- const [compareOpen,setCompareOpen]=useState(false);
+ const {data,loading,error,ready}=useVehicles({page:1});
+ const opts=useOptions();
+ const [make,setMake]=useState(''),[model,setModel]=useState(''),[budget,setBudget]=useState(''),[body,setBody]=useState('');
  const [notice,setNotice]=useState('');
- const [showAll,setShowAll]=useState(false);
-
- const results=useMemo(()=>previewVehicles.filter(v=>
-  (!criteria.make||v.make===criteria.make)&&(!criteria.model||v.model===criteria.model)&&(!criteria.year||String(v.year)===criteria.year)&&(!criteria.body||v.bodyType===criteria.body)
- ),[criteria]);
- const displayed=showAll?results:results.slice(0,4);
-
- useEffect(()=>{
-  if(!detail&&!compareOpen)return;
-  function escape(e:KeyboardEvent){if(e.key==='Escape'){setDetail(null);setCompareOpen(false)}}
-  window.addEventListener('keydown',escape);
-  const old=document.body.style.overflow;document.body.style.overflow='hidden';
-  return ()=>{window.removeEventListener('keydown',escape);document.body.style.overflow=old};
- },[detail,compareOpen]);
- useEffect(()=>{if(!notice)return;const t=window.setTimeout(()=>setNotice(''),7500);return ()=>window.clearTimeout(t)},[notice]);
- function search(c:Criteria){
-  const p=new URLSearchParams();
-  if(c.make)p.set('make',c.make);if(c.model)p.set('model',c.model);
-  if(c.year){p.set('minYear',c.year);p.set('maxYear',c.year)}
-  if(c.body)p.set('body',c.body);
-  if(c.budget==='under2m')p.set('maxPrice','2000000');
-  if(c.budget==='2to5m'){p.set('minPrice','2000000');p.set('maxPrice','5000000')}
-  if(c.budget==='over5m')p.set('minPrice','5000000');
-  window.location.hash='#/cars'+(p.toString()?'?'+p.toString():'');
+ const cars=data?.data.slice(0,4)??[];
+ const models=make?opts.data?.models_by_make[make]??[]:Object.values(opts.data?.models_by_make??{}).flat();
+ function go(e:FormEvent){e.preventDefault();const p=new URLSearchParams();
+  if(make)p.set('make',make);if(model)p.set('model',model);if(body)p.set('body',body);
+  if(budget==='under2m')p.set('maxPrice','2000000');
+  if(budget==='2to5m'){p.set('minPrice','2000000');p.set('maxPrice','5000000');}
+  if(budget==='over5m')p.set('minPrice','5000000');
+  window.location.hash='#/cars'+(p.size?'?'+p.toString():'');
  }
- function reset(){setCriteria(blankCriteria);setShowAll(false);setNotice('Example layout reset. Live inventory arrives with the catalogue integration.')}
- function toggleCompare(id:string){if(!toggleSelected(id))setNotice('Choose up to three example vehicles to compare.');}
- const compareVehicles=previewVehicles.filter(v=>selected.includes(v.id));
- return <div id="top">
-  <a className="skip-link" href="#main">Skip to content</a>
-  <div className="preview-notice"><span className="container"><Sparkles size={14} aria-hidden="true"/> CARFOLK LTD — INTERACTIVE DESIGN PREVIEW <span className="preview-notice__aside">Vehicles and imagery are illustrative; inventory is not live.</span></span></div>
-  <Header/>
-  <main id="main">
-   <section id="home" className="hero" aria-labelledby="hero-title">
-    <div className="hero__photo" role="img" aria-label="Atmospheric automotive photograph used for design demonstration"/>
-    <div className="hero__grain" aria-hidden="true"/>
-    <div className="container hero__inner">
-     <div className="hero__copy"><div className="hero__eyebrow"><span/> WELCOME TO CARFOLK LTD</div>
-      <h1 id="hero-title">Find Your Next Car<br/><em>With Confidence.</em></h1>
-      <p>Quality &amp; Affordability. An easier, more enjoyable way to discover your next drive, explore your options, and take the next step.</p>
-      <div className="hero__actions"><Button href="#/cars" icon={<CarFront size={18}/>}>Browse Our Cars</Button><Button href="#/contact?intent=test-drive" variant="outline" icon={<CalendarCheck size={18}/>}>Book a Viewing</Button></div>
-      <div className="hero__subline"><span><CheckCircle2 size={16}/> Effortless browsing</span><span><CheckCircle2 size={16}/> Clear vehicle details</span><span><CheckCircle2 size={16}/> Human support</span></div>
-     </div>
-     <div className="hero__side-note"><span>THE ROAD AHEAD</span><strong>Starts here.</strong><ArrowDownRight size={24}/></div>
-    </div>
-   </section>
-
-   <div className="container search-wrapper"><VehicleSearch onSearch={search} onReset={reset} resultCount={results.length}/></div>
-
-   <section className="value-strip" aria-label="Why explore with Carfolk"><div className="container value-strip__grid">
-    {values.map(v=><div className="value" key={v.title}><div className="value__icon">{v.icon}</div><div><h3>{v.title}</h3><p>{v.text}</p></div></div>)}
-   </div></section>
-
-   <section id="vehicles" className="section vehicles-section">
-    <div className="container"><SectionHeading eyebrow="OUR SHOWROOM" title="Explore the possibilities." description="Beautifully presented vehicle listings, designed to make choosing easier."/>
-     <div className="vehicle-section__meta"><span><Info size={17}/> <strong>Design showcase only:</strong> examples below do not represent Carfolk inventory or confirmed prices.</span><button type="button" onClick={()=>{window.location.hash='#/cars'}}>View all examples <ArrowRight size={17}/></button></div>
-     <div className="vehicle-grid">
-      {displayed.map(v=><VehicleCard key={v.id} vehicle={v} selected={selected.includes(v.id)} onCompare={()=>toggleCompare(v.id)} onDetails={()=>{window.location.hash='#/cars/'+v.id}}/>)}
-     </div>
-     {displayed.length===0&&<div className="vehicle-empty"><Search size={34}/><h3>No matching design examples</h3><p>Try another make, model, year or body type. Actual stock search will be available once inventory is connected.</p><Button onClick={reset}>Clear filters</Button></div>}
-     <div className="vehicles-foot"><p>Vehicle images and sample details in this preview are illustrative. Actual information will be published by Carfolk after verification.</p><a href="#contact" className="text-link">Need something specific? Contact us <ArrowUpRight size={17}/></a></div>
-    </div>
-   </section>
-
-   <section id="compare" className="compare-teaser"><div className="container compare-teaser__inner">
-    <div className="compare-teaser__mark"><GitCompareArrows size={34}/></div>
-    <div><span className="eyebrow">MAKE A MORE INFORMED CHOICE</span><h2>Compare the details. Find your fit.</h2><p>Select up to three example vehicle cards above to try the comparison experience.</p></div>
-    <Button variant="outline" onClick={()=>{if(selected.length>=2)window.location.hash='#/compare';else{setNotice('Select at least two sample vehicles using the Compare buttons above.');document.getElementById('vehicles')?.scrollIntoView({behavior:'smooth'})}}} icon={<ArrowUpRight size={18}/>}>Compare examples {selected.length? '('+selected.length+')':''}</Button>
-   </div></section>
-
-   <FinanceEstimate/>
-
-   <section id="about" className="about section"><div className="container about__grid">
-    <div className="about__image"><img loading="lazy" src="https://images.unsplash.com/photo-1507136566006-cfc505b114fc?auto=format&fit=crop&w=1200&q=85" alt="Illustrative photograph of automotive craftsmanship"/><div className="about__image-label"><Sparkles size={18}/> QUALITY &amp; AFFORDABILITY</div></div>
-    <div className="about__copy"><span className="eyebrow eyebrow--red">GET TO KNOW CARFOLK</span><h2>Driven by a better way to buy.</h2><p className="about__lead">Carfolk LTD believes finding a vehicle should feel exciting — not complicated.</p><p>Our digital showroom is designed to put useful information first, simplify discovery and make it easy to take the next step when you see something you love.</p>
-      <div className="about__qualities"><div><BadgeCheck size={25}/><span><strong>Thoughtful selection</strong><small>Explore options at your pace.</small></span></div><div><Heart size={25}/><span><strong>Buyer-friendly experience</strong><small>Designed around real decisions.</small></span></div></div>
-      <Button href="#contact" icon={<ArrowUpRight size={18}/>}>Learn More About Carfolk</Button>
-    </div>
-   </div></section>
-
-   <section className="steps-section section"><div className="container"><SectionHeading eyebrow="THE JOURNEY" title="Your next car, made simpler." description="From the first look to the first conversation, every step should feel effortless."/><div className="steps-grid">{steps.map((s,i)=><div className="step" key={s.number}><span>{s.number}</span><h3>{s.title}</h3><p>{s.text}</p>{i<steps.length-1&&<ChevronRight className="step__arrow" size={22} aria-hidden="true"/>}</div>)}</div></div></section>
-
-   <section id="contact" className="contact"><div className="container contact__grid">
-    <div><span className="eyebrow">LET'S GET YOU MOVING</span><h2>See something you love?<br/><em>Let's talk cars.</em></h2><p>Have a question about a vehicle or want to arrange a viewing? Carfolk's official contact channels will be linked here as soon as verified business details are provided.</p><div className="contact__actions"><a className="button button--primary" href="#/contact"><MessageCircle size={18}/> Contact Carfolk <ArrowUpRight size={18}/></a><a className="button button--line-light" href="#/contact?intent=test-drive"><CalendarCheck size={18}/> Request a Viewing</a></div><p className="contact__disclaimer"><Info size={15}/> Contact and booking submissions activate when official details and the backend are connected.</p></div>
-    <div className="contact__card"><span className="contact__card-overline">THE CARFOLK PROMISE</span><div className="contact__card-logo"><Brand/></div><h3>Quality &amp; Affordability</h3><p>A better car-search experience begins with clarity, useful choices and a conversation when you're ready.</p><div className="contact__card-detail"><MapPin size={18}/><span>Dealership location to be confirmed</span></div><div className="contact__card-detail"><Clock3 size={18}/><span>Operating hours to be confirmed</span></div></div>
-   </div></section>
-  </main>
-
-  <footer className="footer"><div className="container footer__top"><div className="footer__brand"><Brand/><p>Quality &amp; Affordability.<br/>The road to your next vehicle starts here.</p></div><div><h4>Explore</h4><a href="#/">Home</a><a href="#/cars">Our Vehicles</a><a href="#/compare">Compare Cars</a><a href="#/finance">Financing</a></div><div><h4>Carfolk</h4><a href="#/about">About Us</a><a href="#/contact">Contact</a><a href="#/contact?intent=test-drive">Book a Viewing</a><a href="#/privacy">Privacy Notice</a></div><div className="footer__note"><h4>Showroom Preview</h4><p>Vehicle photographs and specifications on this page are illustrative. They do not represent verified Carfolk LTD inventory.</p></div></div><div className="container footer__bottom"><span>© {new Date().getFullYear()} Carfolk LTD. All rights reserved.</span><span>Designed around Quality &amp; Affordability.</span></div></footer>
-
-  {selected.length>0&&<div className="comparison-tray" role="status"><div className="container comparison-tray__inner"><div><GitCompareArrows size={19}/><strong>{selected.length} / 3</strong> chosen <span>for comparison</span></div><div className="comparison-tray__names">{compareVehicles.map(v=><span key={v.id}>{v.make} {v.model}<button aria-label={'Remove '+v.name} onClick={()=>toggleCompare(v.id)}><X size={13}/></button></span>)}</div><div className="comparison-tray__actions"><button type="button" className="text-button" onClick={()=>clear()}>Clear</button><button type="button" className="button button--primary" disabled={selected.length<2} onClick={()=>setCompareOpen(true)}>Compare now <ArrowRight size={16}/></button></div></div></div>}
-
-  {detail&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setDetail(null)}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="detail-title"><button className="modal__close" type="button" aria-label="Close vehicle preview" onClick={()=>setDetail(null)}><X/></button><img className="modal__image" src={detail.image} alt={'Example image for '+detail.name}/><div className="modal__body"><span className="eyebrow eyebrow--red">ILLUSTRATIVE SHOWCASE ONLY</span><h2 id="detail-title">{detail.name}</h2><p>This is an example of how a future vehicle page may appear. Carfolk has not listed this vehicle, and no price or availability is confirmed.</p><div className="modal__specs"><span>Make <b>{detail.make}</b></span><span>Model <b>{detail.model}</b></span><span>Year <b>{detail.year} (example)</b></span><span>Body <b>{detail.bodyType}</b></span></div><Button href="#contact" onClick={()=>setDetail(null)} icon={<ArrowUpRight size={16}/>}>Contact Carfolk</Button></div></div></div>}
-  {compareOpen&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setCompareOpen(false)}}><div className="modal modal--compare" role="dialog" aria-modal="true" aria-labelledby="compare-title"><button type="button" className="modal__close" aria-label="Close comparison" onClick={()=>setCompareOpen(false)}><X/></button><div className="modal__body"><span className="eyebrow eyebrow--red">DESIGN EXAMPLES</span><h2 id="compare-title">Compare your shortlist</h2><p>This preview compares illustrative model details only. Actual comparison will use published Carfolk inventory.</p><div className="compare-table"><div className="compare-table__row compare-table__row--head"><strong>Specification</strong>{compareVehicles.map(v=><strong key={v.id}>{v.name}</strong>)}</div>{(['make','model','year','bodyType'] as const).map(key=><div className="compare-table__row" key={key}><span>{key==='bodyType'?'Body type':key.charAt(0).toUpperCase()+key.slice(1)}</span>{compareVehicles.map(v=><span key={v.id}>{v[key]}</span>)}</div>)}<div className="compare-table__row"><span>Price</span>{compareVehicles.map(v=><span key={v.id}>Unconfirmed</span>)}</div></div><Button onClick={()=>setCompareOpen(false)}>Close comparison</Button></div></div></div>}
-  {notice&&<div className="toast" role="status"><Info size={18}/><span>{notice}</span><button aria-label="Dismiss notification" onClick={()=>setNotice('')}><X size={17}/></button></div>}
- </div>;
+ return <Shell>
+  <section className="hero" aria-labelledby="hero-title"><div className="hero__photo" role="img" aria-label="Decorative automotive scene"/><div className="hero__grain"/>
+   <div className="container hero__inner"><div className="hero__copy">
+    <div className="hero__eyebrow"><span/> WELCOME TO CARFOLK LTD</div>
+    <h1 id="hero-title">Find Your Next Car<br/><em>With Confidence.</em></h1>
+    <p>Quality &amp; Affordability. Browse Carfolk's published vehicles, compare your options and get in touch to arrange a viewing.</p>
+    <div className="hero__actions"><a className="button button--primary" href="#/cars"><CarFront size={18}/> Browse Our Cars</a><a className="button button--outline" href="#/contact?intent=test-drive"><CalendarCheck size={18}/> Request a Viewing</a></div>
+    <div className="hero__subline"><span><CheckCircle2 size={16}/> Dealership stock</span><span><CheckCircle2 size={16}/> Clear listings</span><span><CheckCircle2 size={16}/> Direct enquiries</span></div>
+   </div><div className="hero__side-note"><span>THE ROAD AHEAD</span><strong>Starts here.</strong><ArrowDownRight size={24}/></div></div>
+  </section>
+  <div className="container search-wrapper"><div className="search-dock"><div className="search-dock__tabs"><button className="active" type="button"><CarFront size={18}/> Find your vehicle</button></div>
+   <form className="search-dock__form" onSubmit={go}><div className="search-dock__fields">
+    <label>Make<select value={make} onChange={e=>{setMake(e.target.value);setModel('')}}><option value="">Any make</option>{(opts.data?.makes??[]).map(x=><option key={x}>{x}</option>)}</select></label>
+    <label>Model<select value={model} onChange={e=>setModel(e.target.value)}><option value="">Any model</option>{[...new Set(models)].sort().map(x=><option key={x}>{x}</option>)}</select></label>
+    <label>Budget<select value={budget} onChange={e=>setBudget(e.target.value)}><option value="">Any price</option><option value="under2m">Below KES 2M</option><option value="2to5m">KES 2M – 5M</option><option value="over5m">Over KES 5M</option></select></label>
+    <label>Body style<select value={body} onChange={e=>setBody(e.target.value)}><option value="">Any type</option>{(opts.data?.bodies??[]).map(x=><option key={x}>{x}</option>)}</select></label>
+   </div><button className="search-dock__submit" type="submit"><Search size={17}/> Search cars</button></form>
+   <div className="search-dock__hint"><span><SlidersHorizontal size={14}/> {ready&&!error?'Searching Carfolk published inventory':'Live inventory is not connected on this preview.'}</span><a className="text-link" href="#/cars">Advanced filters <ArrowRight size={15}/></a></div>
+  </div></div>
+  <section className="value-strip"><div className="container value-strip__grid">{values.map(v=><div className="value" key={v.title}><span className="value__icon">{v.icon}</span><div><h3>{v.title}</h3><p>{v.text}</p></div></div>)}</div></section>
+  <section className="section" id="vehicles"><div className="container">
+   <Heading eyebrow="CARFOLK SHOWROOM" title="Featured vehicles." description="Freshly published dealership inventory, with current price and availability information."/>
+   <div className="vehicle-section__meta"><span><Info size={17}/> {data?data.meta.total+' published vehicle'+(data.meta.total===1?'':'s'):'Inventory status'}</span><a className="text-link" href="#/cars">View all vehicles <ArrowRight size={17}/></a></div>
+   {loading?<div className="vehicle-empty" role="status"><h3>Loading dealership inventory…</h3></div>:
+    !ready||error?<div className="vehicle-empty"><Info size={32}/><h3>Live inventory not yet available</h3><p>{error??'The live Carfolk API has not been connected to this website preview.'} No sample stock is shown.</p></div>:
+    cars.length?<div className="catalogue-listing-grid">{cars.map(car=><ListingCard key={car.id} car={car} onLimit={()=>setNotice('A maximum of three cars can be compared.')}/>)}</div>:
+    <div className="vehicle-empty"><CarFront size={34}/><h3>No published vehicles yet</h3><p>Carfolk's inventory will appear here after the dealership adds and publishes listings.</p></div>}
+   <div className="vehicles-foot"><p>Vehicle availability is subject to confirmation directly with Carfolk.</p><a className="text-link" href="#/contact">Ask about a vehicle <ArrowUpRight size={17}/></a></div>
+  </div></section>
+  <section className="compare-teaser"><div className="container compare-teaser__inner"><div className="compare-teaser__mark"><GitCompareArrows size={34}/></div><div><span className="eyebrow eyebrow--red">SHOP SMARTER</span><h2>Compare the details. Find your fit.</h2><p>Choose up to three published vehicles and compare their real specifications.</p></div><a href="#/compare" className="button button--primary">Compare cars <ArrowUpRight size={17}/></a></div></section>
+  <section className="finance-box"><div className="finance-box__visual"><div className="finance-box__dark"><span className="eyebrow">KNOW YOUR NUMBERS</span><h2>Plan your next<br/>move confidently.</h2><p>Explore an illustrative monthly repayment estimate. This is not an offer or a loan approval.</p><a className="button button--primary" href="#/finance">Estimate monthly payments <ArrowRight size={16}/></a></div></div><div className="finance-box__details"><h3>Vehicle finance planning</h3><p>Change the deposit, interest assumption, and repayment term. Check your eligibility and lender terms independently.</p><ul><li>Deposit scenarios</li><li>Transparent repayment illustration</li><li>No credit application required</li></ul></div></section>
+  <section className="section about" id="about"><div className="container about__grid"><div className="about__image"><img src="https://images.unsplash.com/photo-1486496572940-2bb2341fdbdf?auto=format&fit=crop&w=1100&q=85" alt="Decorative automotive photograph"/></div><div className="about__copy"><span className="eyebrow eyebrow--red">ABOUT CARFOLK LTD</span><h2>Your next car, with clearer choices.</h2><p className="about__lead">Quality &amp; Affordability.</p><p>Carfolk's digital showroom helps customers discover vehicles, review specifications, compare options and make enquiries directly with the dealership.</p><a className="button button--outline" href="#/about">Discover more <ArrowUpRight size={17}/></a></div></div></section>
+  <section className="steps-section section"><div className="container"><Heading eyebrow="YOUR JOURNEY" title="From browsing to buying." description="A straightforward way to research, inspect and contact the dealership."/><div className="steps-grid">
+   {[['01','Explore','Browse published vehicle listings.'],['02','Compare','Check prices and specifications.'],['03','Enquire','Ask Carfolk for details and current availability.'],['04','Visit','Request a viewing and wait for confirmation.']].map(s=><article className="step" key={s[0]}><span>{s[0]}</span><h3>{s[1]}</h3><p>{s[2]}</p></article>)}
+  </div></div></section>
+  <section className="contact"><div className="container contact__grid"><div><span className="eyebrow">GET IN TOUCH</span><h2>Ready to find <em>your next drive?</em></h2><p>Reach Carfolk to discuss availability, ask questions, or request a viewing.</p><div className="contact__actions"><a className="button button--primary" href="#/contact"><MessageCircle size={18}/> Contact Carfolk</a><a className="button button--line-light" href="#/contact?intent=test-drive"><CalendarCheck size={18}/> Request a viewing</a></div></div><div className="contact__card"><span className="contact__card-overline">CARFOLK LTD</span><h3>Quality &amp; Affordability</h3><p>Explore inventory and contact the dealership directly. Appointments require confirmation.</p></div></div></section>
+  {notice&&<div className="toast" role="status"><Info size={18}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Dismiss"><ArrowRight size={16}/></button></div>}
+ </Shell>;
 }

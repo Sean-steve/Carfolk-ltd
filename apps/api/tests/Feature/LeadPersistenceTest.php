@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 class LeadPersistenceTest extends TestCase {
  use RefreshDatabase;
+ protected function setUp():void {parent::setUp();config()->set('carfolk.leads_enabled',true);config()->set('carfolk.privacy_url','https://carfolk.example/privacy');}
  private function vehicle(array $attrs=[]): Vehicle {
   return Vehicle::create(array_merge(['stock_reference'=>'CF-200','slug'=>'honda-crv','make'=>'Honda','model'=>'CR-V','year'=>2020,'price_kes'=>3400000,'is_published'=>true,'status'=>'available'],$attrs));
  }

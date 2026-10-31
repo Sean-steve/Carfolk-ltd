@@ -1,24 +1,13 @@
 import {describe,it,expect} from 'vitest';
-import {DEMO_CARS} from '../data/showroom';
-import {EMPTY_FILTERS,filterAndSort,filtersFromQuery,filtersToQuery} from './catalogue';
-describe('Carfolk catalogue filters',()=>{
- it('filters by make, year, price, transmission, body and fuel',()=>{
-  const out=filterAndSort(DEMO_CARS,{...EMPTY_FILTERS,make:'Honda',minYear:'2020',maxPrice:'4000000',transmission:'Automatic',body:'SUV',fuel:'Petrol'});
-  expect(out.map(x=>x.id)).toEqual(['crv']);
+import {EMPTY_FILTERS,filtersFromQuery,filtersToApi,filtersToQuery} from './catalogue';
+describe('live server catalogue query mapping',()=>{
+ it('roundtrips filters in hash query',()=>{
+  const f={...EMPTY_FILTERS,q:'Toyota RAV4',make:'Toyota',minPrice:'2000000',sort:'price-desc' as const};
+  expect(filtersFromQuery(filtersToQuery(f))).toEqual(f);
  });
- it('returns empty for impossible query and supports clear state',()=>{
-  expect(filterAndSort(DEMO_CARS,{...EMPTY_FILTERS,q:'not-a-vehicle'})).toHaveLength(0);
-  expect(filterAndSort(DEMO_CARS,EMPTY_FILTERS)).toHaveLength(DEMO_CARS.length);
+ it('maps React filter labels to backend contract and page',()=>{
+  expect(filtersToApi({...EMPTY_FILTERS,body:'SUV',fuel:'Diesel',maxPrice:'5000000',sort:'year-desc'},2))
+    .toEqual({page:2,sort:'year-desc',body_type:'SUV',fuel_type:'Diesel',price_max:'5000000'});
  });
- it('sorts ascending and descending by example price',()=>{
-  const asc=filterAndSort(DEMO_CARS,{...EMPTY_FILTERS,sort:'price-asc'});
-  const desc=filterAndSort(DEMO_CARS,{...EMPTY_FILTERS,sort:'price-desc'});
-  expect(asc[0].priceKes).toBeLessThanOrEqual(asc[asc.length-1].priceKes);
-  expect(desc[0].priceKes).toBeGreaterThanOrEqual(desc[desc.length-1].priceKes);
- });
- it('roundtrips URL filters and validates sort enum',()=>{
-  const filters={...EMPTY_FILTERS,q:'toyota rav4',make:'Toyota',minPrice:'2000000',sort:'price-desc' as const};
-  expect(filtersFromQuery(filtersToQuery(filters))).toEqual(filters);
-  expect(filtersFromQuery('sort=nope').sort).toBe('recent');
- });
+ it('rejects unsafe unknown sort choice',()=>expect(filtersFromQuery('sort=random').sort).toBe('recent'));
 });
