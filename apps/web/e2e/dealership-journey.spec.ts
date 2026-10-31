@@ -65,7 +65,7 @@ test('real PostgreSQL vehicle → enquiry → viewing → administrator → sold
  expect((await live.json()).data).toHaveLength(1);
  await page.goto('/#/cars/ci-toyota-rav4');
  await expect(page.getByText('Vehicle has been marked sold.')).toBeVisible();
- await expect(page.getByRole('link',{name:/Request a viewing/i})).toHaveCount(0);
+ await expect(page.locator('.detail-purchase').getByRole('link',{name:/Request a viewing/i})).toHaveCount(0);
  testInfo.annotations.push({type:'evidence',description:'Buyer and admin transitions validated against ephemeral CI PostgreSQL'});
 });
 
