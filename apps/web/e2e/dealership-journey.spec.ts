@@ -40,7 +40,7 @@ test('real PostgreSQL vehicle → enquiry → viewing → administrator → sold
  await page.locator('#password').fill(password!);
  await page.getByRole('button',{name:/Sign in to dashboard/i}).click();
  await expect(page.getByRole('heading',{name:'Dealership Overview'})).toBeVisible();
- await page.getByRole('link',{name:'Customer Enquiries'}).click();
+ await page.getByRole('link',{name:'Customer Enquiries',exact:true}).click();
  await expect(page.getByText('Certification Buyer').first()).toBeVisible();
  const enquiryRow=page.locator('tr').filter({hasText:'Certification Buyer'}).first();
  await enquiryRow.locator('select').selectOption('contacted');
