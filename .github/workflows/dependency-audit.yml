@@ -1,0 +1,38 @@
+name: Phase 6 — Dependency Security Audit
+on:
+  push:
+    branches: [main, "phase/**"]
+    paths:
+      - "apps/api/composer.json"
+      - "apps/api/composer.lock"
+      - "apps/web/package.json"
+      - "apps/web/package-lock.json"
+      - ".github/workflows/dependency-audit.yml"
+  pull_request:
+    paths:
+      - "apps/api/composer.json"
+      - "apps/api/composer.lock"
+      - "apps/web/package.json"
+      - "apps/web/package-lock.json"
+      - ".github/workflows/dependency-audit.yml"
+permissions:
+  contents: read
+jobs:
+  audits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: PHP dependencies — known vulnerability audit
+        working-directory: apps/api
+        run: composer audit --locked --no-interaction
+      - name: JavaScript production dependencies — high and critical audit
+        working-directory: apps/web
+        run: npm audit --omit=dev --audit-level=high
