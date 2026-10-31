@@ -1,0 +1,102 @@
+name: Carfolk Phase 5 — Browser and PostgreSQL Integration
+on:
+  push:
+    branches: [main, "phase/**"]
+    paths:
+      - "apps/web/**"
+      - "apps/api/**"
+      - ".github/workflows/cross-system-ci.yml"
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "apps/api/**"
+      - ".github/workflows/cross-system-ci.yml"
+permissions:
+  contents: read
+jobs:
+  browser-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: carfolk
+          POSTGRES_PASSWORD: certification-db-only
+          POSTGRES_DB: carfolk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U carfolk -d carfolk_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      CI: "true"
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      APP_TIMEZONE: Africa/Nairobi
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5432"
+      DB_DATABASE: carfolk_test
+      DB_USERNAME: carfolk
+      DB_PASSWORD: certification-db-only
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      CARFOLK_CERT_PASSWORD: ci-only-dealership-account-2026
+      CARFOLK_LEADS_ENABLED: "true"
+      # Test-only document URL. A production policy must be legally approved by Carfolk.
+      CARFOLK_PRIVACY_URL: http://127.0.0.1:5173/#/privacy
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP and PostgreSQL extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring,pdo_pgsql,pgsql,gd,fileinfo,exif,dom,xml,curl,bcmath
+          coverage: none
+          tools: composer:v2
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Prepare Laravel
+        working-directory: apps/api
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress --no-scripts
+          cp .env.example .env
+          php artisan key:generate --force
+          php artisan package:discover --ansi
+          php artisan migrate --force --no-interaction
+          php artisan db:seed --class=CertificationSeeder --force
+          php artisan storage:link
+          nohup php artisan serve --host=127.0.0.1 --port=8000 > /tmp/carfolk-api.log 2>&1 &
+      - name: Install frontend and Playwright
+        working-directory: apps/web
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Start website and confirm API is available
+        working-directory: apps/web
+        run: |
+          nohup npm run dev -- --host 127.0.0.1 > /tmp/carfolk-web.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/up >/dev/null && curl -fsS http://127.0.0.1:5173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8000/api/v1/site > /tmp/carfolk-site.json
+          curl -fsS http://127.0.0.1:5173/api/v1/vehicles >/tmp/carfolk-vehicles.json
+          grep -q 'ci-toyota-rav4' /tmp/carfolk-vehicles.json
+      - name: Run desktop + mobile buyer-to-admin certification
+        working-directory: apps/web
+        run: npx playwright test --reporter=line
+      - name: Preserve browser evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: carfolk-phase-5-diagnostics
+          path: |
+            apps/web/test-results/
+            apps/web/playwright-report/
+            /tmp/carfolk-api.log
+            /tmp/carfolk-web.log
+          retention-days: 7

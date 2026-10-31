@@ -1,7 +1,7 @@
 # Carfolk LTD — Current architecture (post Phase 4)
 
 ## Frontend
-Vite + React 18 + TypeScript. Deployed as a **static preview** on GitHub Pages. Its sample inventory and browser-only enquiry validation are intentionally labelled and currently disconnected from the backend.
+Vite + React 18 + TypeScript. Deployed as a **static preview** on GitHub Pages. Phase 5 replaces the sample inventory UI with live API calls. It shows an explicit disconnected state on GitHub Pages until a backend is configured. Lead forms submit only after privacy approval and server availability.
 
 ## Backend
 Laravel **13.x**, PHP **8.3+**, PostgreSQL **16** implementation located at `apps/api`.
@@ -26,7 +26,7 @@ PostgreSQL is the transactional source of truth. Vehicle price is integer KES. A
 - Production (Phase 6): TLS reverse proxy, PHP runtime, PostgreSQL on private network, storage, backups, monitoring, secret management and approved public domain. Do not point web server document root at the repository; use `apps/api/public`.
 
 ## Roadmap
-Phase 5 will connect React catalogue and all public forms to real Laravel endpoints, remove synthetic stock, and validate the cross-system customer/operator lifecycle. Phase 6 will complete SEO, hosting and release certification.
+Phase 5 implements real React–Laravel contracts and automated PostgreSQL plus browser certification. Phase 6 must complete real-domain deployment, client-approved content, SEO, security, and release certification.
 
 ## Extensibility
 Only one dealership is supported in Model A; marketplace multi-tenancy and sales checkout are explicitly out of scope.

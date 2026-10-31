@@ -11,8 +11,8 @@
 | 2 — Discovery | Browse, filter, vehicle gallery, compare and financing estimates (demo cars) |
 | 3 — Conversion UX | About, Contact, Privacy preview, vehicle enquiry and viewing form designs (validation only) |
 | **4 — Backend** | **Laravel 13, PostgreSQL migrations, admin dashboard, real inventory and lead endpoints, photo management and backend tests** |
-| 5 — Integration | **Pending:** replace demo inventory with live API and connect form submissions; certify workflows |
-| 6 — Release | **Pending:** production infrastructure, SEO, real content and security/handover gates |
+| 5 — Integration | **Implemented:** Laravel-powered listings, customer lead capture (privacy-gated), status continuity, cross-system CI |
+| 6 — Release | **Pending:** production infrastructure, approved client content, SEO, legal privacy, and handover gates |
 
 ### Repositories and apps
 
@@ -23,7 +23,7 @@ docs/       Phase specifications, architecture, API/data contracts and certifica
 .github/    Frontend CI, backend CI and static preview deployment
 ```
 
-The preview is at [Carfolk LTD on GitHub Pages](https://sean-steve.github.io/Carfolk-ltd/). It is a **static preview, not the live sales platform**. The Laravel admin dashboard is available only when the backend runs on PHP-capable hosting.
+The preview is at [Carfolk LTD on GitHub Pages](https://sean-steve.github.io/Carfolk-ltd/). It is a **static preview, not the live sales platform**. Because no backend is connected to Pages, the public showroom displays an unavailable/empty state rather than demonstration vehicles. The Laravel admin dashboard is available only when the backend runs on PHP-capable hosting.
 
 ### Start the frontend
 ```bash
@@ -35,6 +35,10 @@ npm run typecheck && npm run test && npm run build
 
 ### Start the backend
 See [Backend README](apps/api/README.md) for PostgreSQL Docker setup, Composer installation, migrations, admin provisioning and server startup.
+
+### Phase 5 cross-system integration
+
+The React frontend connects to Laravel using same-origin `/api/v1` and `/storage` paths (proxied by Vite locally). On real hosting, an HTTPS reverse proxy must route these paths to Laravel. `CARFOLK_LEADS_ENABLED` is disabled by default, and a valid Carfolk-approved `CARFOLK_PRIVACY_URL` is required to collect enquiries. See [Phase 5 integration](docs/PHASE_5_INTEGRATION.md) for evidence, browser tests and rollout limits.
 
 ### Model A documentation
 - [Delivery roadmap](docs/ROADMAP.md)

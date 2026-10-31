@@ -1,15 +1,20 @@
 import {ArrowLeft,ChevronRight,Info,LockKeyhole,ShieldCheck} from 'lucide-react';
 import {Shell} from '../components/Shell';
+import {useSite} from '../api/hooks';
 export function PrivacyPage(){
- return <Shell>
-  <section className="catalogue-intro catalogue-intro--compact"><div className="container catalogue-intro__inner"><div className="catalogue-breadcrumb"><a href="#/">Home</a><ChevronRight size={14}/> Privacy</div><span className="eyebrow">CUSTOMER INFORMATION</span><h1>Privacy &amp; <em>transparency.</em></h1><p>How the Carfolk platform is designed to handle enquiries.</p></div></section>
+ const {data:site}=useSite();
+ return <Shell><section className="catalogue-intro catalogue-intro--compact"><div className="container catalogue-intro__inner"><div className="catalogue-breadcrumb"><a href="#/">Home</a><ChevronRight size={14}/> Privacy</div><span className="eyebrow">YOUR DATA</span><h1>Privacy &amp; <em>transparency.</em></h1><p>How we handle customer information.</p></div></section>
   <article className="container privacy-page">
-   <div className="privacy-page__alert"><Info size={23}/><div><strong>Preview-stage notice — not the final business privacy policy.</strong><p>The website is currently a static GitHub Pages demonstration. Enquiry and viewing forms only check entered values in your browser; they do not submit, email, upload or save them. Do not enter sensitive information during this preview.</p></div></div>
+   <div className="privacy-page__alert"><Info size={23}/><div>
+    <strong>{site?.leads_enabled?'Approved privacy policy is available.':'Lead collection is currently disabled.'}</strong>
+    <p>{site?.leads_enabled?'Review the dealership’s approved privacy notice before sending an enquiry.':'The customer forms on this website are disabled until a live service and approved privacy notice are provided. This page is not a substitute for the dealership’s formal privacy policy.'}</p>
+    {site?.privacy_url&&<a className="button button--outline" target="_blank" rel="noopener noreferrer" href={site.privacy_url}>Read official privacy policy ↗</a>}
+   </div></div>
    <div className="privacy-page__grid">
-    <div className="privacy-page__section"><LockKeyhole size={27}/><h2>Information used in future enquiries</h2><p>When a production backend is activated, the dealership expects to request your name, contact phone number, an optional email address, the vehicle of interest, your message, and optional viewing date/time.</p><p>Personal information will be used only for the purposes disclosed in the final Carfolk privacy policy and applicable service processes.</p></div>
-    <div className="privacy-page__section"><ShieldCheck size={27}/><h2>Preview-stage security boundaries</h2><p>The current forms do not perform network submissions or store personal information locally. A limited example-car comparison selection is stored in your browser session; it contains no customer contact data.</p><p>Prior to accepting real leads, Carfolk must approve a full data privacy notice, retention and deletion periods, security controls, access policies, and contact preferences.</p></div>
+    <div className="privacy-page__section"><LockKeyhole size={27}/><h2>Enquiry information</h2><p>When enabled, forms request your name, Kenyan phone number, optional email, message and your selected vehicle. Viewing requests also include your preferred date and time.</p><p>These details are sent to the Carfolk dealership server when you explicitly submit and consent.</p></div>
+    <div className="privacy-page__section"><ShieldCheck size={27}/><h2>Dealership operations</h2><p>Submitted enquiries are stored in the dealership database and visible only to authorized staff. The browsing comparison shortlist stores only vehicle IDs in your current browser session.</p><p>Retention, access and deletion procedures must follow the approved formal privacy policy and applicable law.</p></div>
    </div>
-   <section className="privacy-page__next"><h2>What happens before launch?</h2><p>Production enquiry capture, email notifications and the administrator inbox will be built and tested during the backend and integration phases. This page will be replaced by the client's approved and legally reviewed privacy notice before customers are asked to submit information.</p><a href="#/contact" className="button button--outline"><ArrowLeft size={16}/> Back to contact</a></section>
+   <section className="privacy-page__next"><h2>Questions about your information?</h2><p>Contact Carfolk through the verified business channels. No business contact details are invented on this website.</p><a href="#/contact" className="button button--outline"><ArrowLeft size={16}/> Back to Contact</a></section>
   </article>
- </Shell>
+ </Shell>;
 }

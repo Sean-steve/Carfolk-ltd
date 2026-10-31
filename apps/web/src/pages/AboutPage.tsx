@@ -29,7 +29,7 @@ export function AboutPage(){
   <section className="container about-story">
    <div><span className="eyebrow eyebrow--red">OUR APPROACH</span><h2>Finding your next vehicle should feel exciting, not overwhelming.</h2></div>
    <div><p>Carfolk LTD's online showroom is designed to simplify the way buyers explore vehicles. Clear specifications, useful comparisons, and simple ways to reach out help turn research into a conversation.</p>
-   <p>As the platform develops, the dealership will provide its verified stock details, operating information, and contact channels. Nothing in this preview should be taken as a claim about current inventory, dealer history or inspection guarantees.</p>
+   <p>The website only shows vehicles published from the dealership's inventory database. Contact Carfolk to confirm vehicle availability, condition and final terms. Claims about dealer history or inspection guarantees require independent verification.</p>
    <a className="text-link" href="#/contact">Talk to Carfolk <ArrowRight size={17}/></a></div>
   </section>
 

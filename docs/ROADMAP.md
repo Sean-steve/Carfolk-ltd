@@ -13,3 +13,7 @@
 **Acceptance gate:** no fake inventory in production, all specified business workflows actually work and are tested, no critical unresolved bugs.
 
 **Commercial boundary:** only single-dealership Model A. Marketplace sellers, checkout, M-PESA and full CRM are not included.
+
+## Phase 5 implementation
+
+React uses Laravel for live inventory/contacts and stores approved leads through a consent-gated API. Cross-system PostgreSQL and Chromium tests prove frontend-to-admin continuity. **Not deployed to a production server**; Phase 6 is required.
