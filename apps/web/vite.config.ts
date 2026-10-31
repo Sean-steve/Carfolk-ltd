@@ -1,9 +1,10 @@
-import {defineConfig} from 'vite';
+import {defineConfig,loadEnv} from 'vite';
 import react from '@vitejs/plugin-react';
 // Search indexing requires explicit launch authorization at build time;
 // the production Nginx noindex header and Laravel SEO gate are additional controls.
 export default defineConfig(({mode})=>{
- const indexApproved=mode==='production'&&process.env.CARFOLK_SEO_INDEX_APPROVED==='I_APPROVE_CARFOLK_INDEXING';
+ const configEnv=loadEnv(mode,'.','CARFOLK_');
+ const indexApproved=mode==='production'&&configEnv.CARFOLK_SEO_INDEX_APPROVED==='I_APPROVE_CARFOLK_INDEXING';
  return {
   plugins:[
    react(),
