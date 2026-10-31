@@ -57,6 +57,13 @@ class AdminSecurityAndInventoryTest extends TestCase {
   $this->patch('/manage/settings',['name'=>'Carfolk LTD','tagline'=>'Quality & Affordability','email'=>'info@carfolk.example'])->assertRedirect();
   $this->getJson('/api/v1/site')->assertJsonPath('data.email','info@carfolk.example');
  }
+ public function test_html_vehicle_form_ignores_blank_optional_features(): void {
+  $this->actingAs($this->admin());
+  $payload=$this->vehicleInput(['features'=>['Reverse camera','','   ','Cruise control'],'is_published'=>1]);
+  $this->post('/manage/vehicles',$payload)->assertRedirect();
+  $this->assertSame(['Reverse camera','Cruise control'],Vehicle::first()->features);
+  $this->get('/manage/vehicles/'.Vehicle::first()->id.'/edit')->assertOk();
+ }
  public function test_inactive_administrator_is_denied_even_with_session(): void {
   $user=$this->admin();
   $user->update(['is_active'=>false]);
