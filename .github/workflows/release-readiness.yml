@@ -41,7 +41,8 @@ jobs:
           sudo nginx -t
       - name: Check conservative SEO preview state
         run: |
-          grep -q '<meta name="robots" content="noindex,nofollow"' apps/web/index.html
+          grep -q 'content="__CARFOLK_ROBOTS__"' apps/web/index.html
+          grep -q 'I_APPROVE_CARFOLK_INDEXING' apps/web/vite.config.ts
           grep -q 'Disallow: /' apps/web/public/robots.txt
           grep -q 'CARFOLK_SEO_ENABLED=false' apps/api/.env.production.example
           grep -q 'CARFOLK_LEADS_ENABLED=false' apps/api/.env.production.example

@@ -19,8 +19,8 @@ Phase 6 provides a production deployment blueprint, secure defaults, crawlable s
 - Independent security tests and an incident-response owner remain release gates.
 
 ## SEO strategy
-- GitHub Pages preview remains noindex. Production Nginx starts with X-Robots-Tag noindex; dynamic Laravel robots disallows all and sitemap is empty by default.
-- After verified live inventory, canonical HTTPS domain and signed sign-off, set CARFOLK_PUBLIC_URL, enable CARFOLK_SEO_ENABLED and remove the Nginx noindex response header.
+- GitHub Pages preview remains noindex. The frontend build requires a separate CARFOLK_SEO_INDEX_APPROVED=I_APPROVE_CARFOLK_INDEXING environment flag (production mode only) to make the root HTML indexable; the default is noindex. Production Nginx starts with X-Robots-Tag noindex; dynamic Laravel robots disallows all and sitemap is empty by default.
+- After verified live inventory, canonical HTTPS domain and signed sign-off, set CARFOLK_PUBLIC_URL, enable CARFOLK_SEO_ENABLED, rebuild the frontend with the approved indexing flag, and remove the Nginx noindex response header.
 - /listing/{slug} returns server-rendered HTML with vehicle title, description, canonical, Open Graph fields, KES Offer structured data, real photos and clear availability.
 - /sitemap.xml contains only published, nonarchived vehicles; /robots.txt routes are served by Laravel. Admin and API routes remain disallowed from crawling.
 - The React UI uses hash routing; indexing all frontend screens and dynamic sitemap pagination beyond 49,999 cars are future enhancement areas.
