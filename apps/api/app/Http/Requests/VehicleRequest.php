@@ -4,6 +4,15 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 class VehicleRequest extends FormRequest {
     public function authorize(): bool {return (bool)$this->user()?->is_admin && (bool)$this->user()?->is_active;}
+    protected function prepareForValidation(): void {
+        // The admin UI has optional feature inputs; do not persist blank features.
+        $features=$this->input('features');
+        if(is_array($features)) {
+            $this->merge(['features'=>array_values(array_filter(array_map(
+                fn($value)=>is_string($value)?trim($value):$value,$features
+            ),fn($value)=>$value!==''&&$value!==null))]);
+        }
+    }
     public function rules(): array {
         $id=$this->route('vehicle')?->getKey();
         return [
