@@ -25,7 +25,7 @@ export function VehicleDetailPage({slug}:{slug:string}){
  ];
  const related=DEMO_CARS.filter(x=>x.id!==vehicle.id&&(x.make===vehicle.make||x.body===vehicle.body)).slice(0,3);
  async function share(){const url=window.location.href;try{if(navigator.share)await navigator.share({title:'Carfolk design example',text:'View an illustrative vehicle listing',url});else if(navigator.clipboard){await navigator.clipboard.writeText(url);setNotice('Demo listing link copied.');}else setNotice('You can copy this page address to share the example.')}catch{/* User cancelled sharing */}}
- function addCompare(){if(!toggleCompare(vehicle.id))setNotice('Choose up to three example vehicles. Remove one from comparison first.');}
+ function addCompare(){if(!vehicle)return;if(!toggleCompare(vehicle.id))setNotice('Choose up to three example vehicles. Remove one from comparison first.');}
  return <Shell>
   <div className="container vehicle-detail">
    <nav className="vehicle-detail__crumb" aria-label="Breadcrumb"><a href="#/">Home</a><ChevronRight size={14}/><a href="#/cars">Cars for Sale</a><ChevronRight size={14}/><span>{vehicle.make} {vehicle.model}</span></nav>
