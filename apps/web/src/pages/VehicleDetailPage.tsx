@@ -5,6 +5,7 @@ import {PreviewPhoto} from '../components/PreviewPhoto';
 import {ListingCard} from '../components/ListingCard';
 import {DEMO_CARS,getDemoCar,kes} from '../data/showroom';
 import {useCompare} from '../state/CompareContext';
+import {toVehicleEnquiry,toVehicleViewing} from '../lib/route';
 export function VehicleDetailPage({slug}:{slug:string}){
  const vehicle=getDemoCar(slug);
  const [index,setIndex]=useState(0);
@@ -46,11 +47,12 @@ export function VehicleDetailPage({slug}:{slug:string}){
      <div className="detail-purchase__price"><span>Illustrative vehicle price</span><strong>{kes(vehicle.priceKes)}</strong><small>Not an offer or current Carfolk selling price.</small></div>
      <div className="detail-purchase__quick"><span><Gauge size={17}/>{new Intl.NumberFormat('en-KE').format(vehicle.mileageKm)} km</span><span><Fuel size={17}/>{vehicle.fuel}</span><span><Settings2 size={17}/>{vehicle.transmission}</span><span><MapPin size={17}/>{vehicle.location} (example)</span></div>
      <div className="detail-purchase__note"><ShieldCheck size={19}/><span>Availability and vehicle verification are pending real dealership inventory.</span></div>
-     <a className="button button--primary" href="#/contact"><CalendarDays size={18}/> Request viewing details <ArrowUpRight size={18}/></a>
+     <a className="button button--primary" href={toVehicleViewing(vehicle.slug)}><CalendarDays size={18}/> Request a viewing <ArrowUpRight size={18}/></a>
+     <a className="button button--outline" href={toVehicleEnquiry(vehicle.slug)}>Enquire about this car <ArrowUpRight size={18}/></a>
      <a className="button button--outline" href={`#/finance?price=${vehicle.priceKes}&vehicle=${encodeURIComponent(vehicle.slug)}`}><Tag size={18}/> Estimate monthly payments</a>
      <button type="button" className={active?'detail-compare is-active':'detail-compare'} onClick={addCompare}><GitCompareArrows size={18}/>{active?'Remove from comparison':'Add to comparison'}</button>
      {active&&<a href="#/compare" className="detail-secondary-link">Go to comparison <ArrowRight size={16}/></a>}
-     <small className="detail-purchase__disclaimer"><Info size={14}/> The enquiry and appointment form will be activated when the Laravel backend is connected in later phases.</small>
+     <small className="detail-purchase__disclaimer"><Info size={14}/> Forms are available as a design preview only. They do not send or save customer details until the backend is connected.</small>
     </aside>
    </div>
    <section className="detail-related"><div className="section-heading"><div><span className="eyebrow eyebrow--red">MORE TO EXPLORE</span><h2>Keep discovering.</h2></div><a href="#/cars" className="detail-secondary-link">Browse all examples <ArrowRight size={16}/></a></div><div className="catalogue-listing-grid">{related.map(car=><ListingCard key={car.id} car={car} onLimit={()=>setNotice('You can select a maximum of three examples for comparison.')}/>)}</div></section>

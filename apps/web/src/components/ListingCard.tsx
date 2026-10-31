@@ -2,7 +2,7 @@ import {ArrowUpRight,Check,GitCompareArrows,MapPin} from 'lucide-react';
 import {PreviewPhoto} from './PreviewPhoto';
 import type {DemoVehicle} from '../data/showroom';
 import {kes} from '../data/showroom';
-import {toCar} from '../lib/route';
+import {toCar,toVehicleEnquiry} from '../lib/route';
 import {useCompare} from '../state/CompareContext';
 export function ListingCard({car,onLimit}:{car:DemoVehicle;onLimit:()=>void}){
  const {selected,toggleCompare}=useCompare();
@@ -23,7 +23,7 @@ export function ListingCard({car,onLimit}:{car:DemoVehicle;onLimit:()=>void}){
    <div className="listing-card__actions">
     <button type="button" onClick={()=>{if(!toggleCompare(car.id))onLimit()}} className={active?'listing-card__compare is-active':'listing-card__compare'} aria-pressed={active}>{active?<Check size={16}/>:<GitCompareArrows size={16}/>} {active?'Added':'Compare'}</button>
     <a href={toCar(car.slug)} className="listing-card__view">View example <ArrowUpRight size={16}/></a>
-   </div>
+   </div><a className="listing-card__enquiry" href={toVehicleEnquiry(car.slug)}>Enquire about this example <ArrowUpRight size={15}/></a>
   </div>
  </article>;
 }
