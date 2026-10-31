@@ -12,10 +12,11 @@ const links=[
 export function Header(){
  const [open,setOpen]=useState(false);
  const current=window.location.hash;
+ const active=(href:string)=>current===href||current.startsWith(href+'?')||(href==='#/cars'&&current.startsWith('#/cars/'))||(!current&&href==='#/');
  return <header className="header"><div className="container header__inner">
    <Brand/>
    <nav id="site-nav" aria-label="Main navigation" className={open?'nav nav--open':'nav'}>
-    {links.map((link,i)=><a className={(current===link.href||(!current&&i===0))?'nav__active':''} key={link.href} href={link.href} onClick={()=>setOpen(false)}>{link.label}</a>)}
+    {links.map(link=><a className={active(link.href)?'nav__active':''} key={link.href} href={link.href} onClick={()=>setOpen(false)}>{link.label}</a>)}
    </nav>
    <a className="header__cta" href="#/contact">Talk to us <ArrowUpRight size={16} aria-hidden="true"/></a>
    <button className="menu" type="button" aria-label={open?'Close navigation':'Open navigation'} aria-expanded={open} aria-controls="site-nav" onClick={()=>setOpen(s=>!s)}>{open?<X size={24}/>:<Menu size={24}/>}</button>

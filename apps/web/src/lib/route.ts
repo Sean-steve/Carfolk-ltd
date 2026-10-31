@@ -1,4 +1,4 @@
-export type Route={name:'home'|'cars'|'detail'|'compare'|'finance'|'about'|'contact'|'not-found';slug?:string;query:string};
+export type Route={name:'home'|'cars'|'detail'|'compare'|'finance'|'about'|'contact'|'privacy'|'not-found';slug?:string;query:string};
 export function currentRoute():Route{
  const hash=decodeURIComponent(window.location.hash);
  const raw=hash.startsWith('#/')?hash.slice(2):'';
@@ -10,6 +10,9 @@ export function currentRoute():Route{
  if(path==='finance')return {name:'finance',query};
  if(path==='about')return {name:'about',query};
  if(path==='contact')return {name:'contact',query};
+ if(path==='privacy')return {name:'privacy',query};
  return {name:'not-found',query};
 }
 export const toCar=(slug:string)=>'#/cars/'+encodeURIComponent(slug);
+export const toVehicleEnquiry=(slug:string)=>'#/contact?intent=vehicle&vehicle='+encodeURIComponent(slug);
+export const toVehicleViewing=(slug:string)=>'#/contact?intent=test-drive&vehicle='+encodeURIComponent(slug);

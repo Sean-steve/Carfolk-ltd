@@ -5,7 +5,7 @@
 ## Delivery state
 - **Phase 0:** React/TypeScript frontend foundation, reusable brand/components, design preview, CI and architecture documentation.
 - **Phase 1:** Reconstruct the approved landing-page design for Carfolk.
-- **Phases 2–3:** Vehicle catalogue/details, comparison, calculator, enquiry, test-drive and public pages.
+- **Phase 2:** Vehicle catalogue/details, comparison and calculator.\n- **Phase 3:** Dedicated About, Contact and Privacy preview pages; enquiry/viewing UX with browser-only validation and configurable verified contact channels.
 - **Phase 4:** Laravel + PostgreSQL admin/inventory API.
 - **Phases 5–6:** Real integration, QA, SEO, security, deployment and handover.
 
@@ -40,3 +40,7 @@ GitHub Pages may host the **static** frontend preview. It cannot host PHP/Larave
 - [Data model](docs/DATA_MODEL.md)
 
 All displayed demo elements are illustrative only. Do not publish fictitious vehicles, prices, review scores, dealer statistics, or inventory as real.
+
+## Phase 3 business contact configuration
+
+See `apps/web/.env.example` and `docs/PHASE_3_CONVERSION.md`. All `VITE_CARFOLK_*` values are **public** and must contain only client-confirmed business information. No real contact data or test-drive forms are submitted on GitHub Pages.
