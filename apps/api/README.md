@@ -35,7 +35,7 @@ Visit `http://localhost:8000/manage/login`. Admin creation is interactive and re
 - `POST /api/v1/enquiries`, `POST /api/v1/test-drives` (rate-limited).
 - `/api/v1/admin/*` protected by same-origin session authentication and CSRF; see `routes/api.php`.
 
-See `docs/BACKEND_PHASE_4.md` for full contracts and rollout limitations.
+See `../../docs/PHASE_5_INTEGRATION.md` for the full live React integration and certification gate.
 
 ## Run tests
 A PostgreSQL instance named `carfolk_test` is expected in CI. The GitHub Actions backend workflow provisions it automatically, performs migrations and executes feature tests:
@@ -50,5 +50,9 @@ php artisan test
 - Enforce same-origin for session-based administration; don't move session cookies across unrelated domains.
 - Run `php artisan migrate --force` only after DB backups and migration approval.
 - Configure a private network PostgreSQL database, public uploads with `storage:link`, backups, PII retention and monitoring.
-- No production infrastructure or domain has been provisioned in Phase 4. The GitHub Pages frontend still runs on demo content until Phase 5.
+- No production infrastructure or domain has been provisioned. Phase 5 removes active demonstration listings and connects the React app to the API in local and configured hosting; GitHub Pages is disconnected by default.
 - Commit a resolved `composer.lock` before production release to guarantee reproducible dependency versions.
+
+## Phase 5 lead acceptance gate
+
+**Disabled by default.** Real public enquiries are accepted only when `CARFOLK_LEADS_ENABLED=true` and `CARFOLK_PRIVACY_URL` points to a client-approved policy. Never use the CI policy URL for production. `GET /api/v1/site` exposes the public flag and privacy URL; visitor forms remain disabled when approval is missing. Local same-origin web development uses Vite proxy on port 5173 to Laravel port 8000. CI browser tests use an isolated PostgreSQL database and test-only fixtures which are guarded against production execution.
