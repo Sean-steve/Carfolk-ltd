@@ -12,6 +12,14 @@ src="$(cd "$1" && pwd)"
 root="${CARFOLK_ROOT:-/srv/carfolk}"
 shared="$root/shared"
 [[ -s "$shared/.env" ]] || { echo "Missing $shared/.env; do not deploy" >&2; exit 1; }
+grep -qx 'APP_ENV=production' "$shared/.env" || { echo 'APP_ENV must be production' >&2; exit 1; }
+grep -qx 'APP_DEBUG=false' "$shared/.env" || { echo 'APP_DEBUG must be false' >&2; exit 1; }
+grep -qx 'SESSION_SECURE_COOKIE=true' "$shared/.env" || { echo 'Secure session cookies required' >&2; exit 1; }
+grep -q '^APP_URL=https://' "$shared/.env" || { echo 'Canonical HTTPS origin missing' >&2; exit 1; }
+if grep -Eq '^(APP_URL|CARFOLK_PUBLIC_URL)=.*example\\.com' "$shared/.env"; then
+ echo 'Template example.com domain detected; real domain required' >&2; exit 1
+fi
+
 [[ -s "$src/apps/api/composer.lock" && -s "$src/apps/web/package-lock.json" ]] || {
  echo 'Missing dependency lockfile(s) — deploy aborted' >&2; exit 1;
 }

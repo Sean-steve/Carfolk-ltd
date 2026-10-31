@@ -7,4 +7,6 @@ return [
     // Search visibility must be explicitly approved after real inventory/domain verification.
     'seo_enabled' => (bool) env('CARFOLK_SEO_ENABLED', false),
     'public_url' => env('CARFOLK_PUBLIC_URL'),
+    'retention_approved' => (bool) env('CARFOLK_RETENTION_APPROVED', false),
+    'retention_days' => (int) env('CARFOLK_RETENTION_DAYS', 0),
 ];
