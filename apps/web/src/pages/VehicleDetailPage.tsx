@@ -32,7 +32,7 @@ export function VehicleDetailPage({slug}:{slug:string}){
   ['Drivetrain',vehicle.drivetrain??'Ask the dealership'],['Body type',vehicle.body_type??'Ask the dealership'],
   ['Condition',vehicle.condition??'Ask the dealership'],['Colour',vehicle.colour??'Ask the dealership'],['Location',vehicle.location??'Contact Carfolk']
  ];
- async function share(){try{if(navigator.share)await navigator.share({title:vehicleName(vehicle),url:location.href});
+ async function share(){try{if(navigator.share)await navigator.share({title:vehicleName(vehicle!),url:location.href});
   else if(navigator.clipboard){await navigator.clipboard.writeText(location.href);setNotice('Vehicle link copied.')}
  }catch{/* share cancelled */}}
  return <Shell><div className="container vehicle-detail">
