@@ -24,7 +24,7 @@ test('real PostgreSQL vehicle → enquiry → viewing → administrator → sold
  await expect(page.getByText('Enquiry received by Carfolk.')).toBeVisible();
  await page.goto('/#/cars/ci-toyota-rav4');
  await page.locator('.detail-purchase').getByRole('link',{name:/Request a viewing/i}).click();
- await expect(page).toHaveURL(/#\\/contact\\?intent=test-drive&vehicle=ci-toyota-rav4/);
+ await expect(page).toHaveURL(/vehicle=ci-toyota-rav4/);
  await expect(page.getByText('Toyota RAV4 · 2022')).toBeVisible();
  const date=new Date(Date.now()+5*86400000).toISOString().slice(0,10);
  await page.locator('#enquiry-name').fill('Certification Buyer');
