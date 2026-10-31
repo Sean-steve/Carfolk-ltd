@@ -1,0 +1,18 @@
+[Unit]
+Description=Carfolk PostgreSQL backup (local dump with integrity check)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=carfolk-backup
+Group=carfolk-backup
+ExecStart=/srv/carfolk/current/infra/scripts/backup-db.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/srv/carfolk/shared/backups
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

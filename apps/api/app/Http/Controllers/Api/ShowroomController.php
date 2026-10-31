@@ -66,7 +66,7 @@ class ShowroomController extends Controller {
  }
  public function site(): JsonResponse {
    return response()->json(['data'=>array_merge(SiteSetting::publicDetails(),[
-     'leads_enabled'=>(bool)config('carfolk.leads_enabled') && (bool)filter_var(config('carfolk.privacy_url'),FILTER_VALIDATE_URL),
+     'leads_enabled'=>\App\Support\LeadAcceptance::enabled(),
      'privacy_url'=>filter_var(config('carfolk.privacy_url'),FILTER_VALIDATE_URL)?config('carfolk.privacy_url'):null,
    ])]);
  }

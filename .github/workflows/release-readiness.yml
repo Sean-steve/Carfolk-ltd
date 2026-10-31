@@ -1,0 +1,47 @@
+name: Phase 6 — Release Readiness Checks
+on:
+  push:
+    branches: [main, "phase/**"]
+    paths:
+      - "infra/**"
+      - "docs/PHASE_6_RELEASE.md"
+      - "apps/api/composer.lock"
+      - "apps/web/package-lock.json"
+      - ".github/workflows/release-readiness.yml"
+  pull_request:
+    paths:
+      - "infra/**"
+      - "docs/PHASE_6_RELEASE.md"
+      - "apps/api/composer.lock"
+      - "apps/web/package-lock.json"
+      - ".github/workflows/release-readiness.yml"
+permissions:
+  contents: read
+jobs:
+  release-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell syntax of deployment and backup scripts
+        run: |
+          find infra/scripts -name '*.sh' -print0 | xargs -0 -n1 bash -n
+      - name: Dependency lock and release documentation prerequisites
+        run: bash infra/scripts/preflight.sh
+      - name: Parse Nginx configuration using test-only fake certificate
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y nginx openssl
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout /tmp/carfolk-test.key -out /tmp/carfolk-test.pem -days 1 -subj "/CN=carfolk-ci.invalid" >/dev/null 2>&1
+          sudo mkdir -p /etc/letsencrypt/live/carfolk-ci.invalid
+          sudo cp /tmp/carfolk-test.key /etc/letsencrypt/live/carfolk-ci.invalid/privkey.pem
+          sudo cp /tmp/carfolk-test.pem /etc/letsencrypt/live/carfolk-ci.invalid/fullchain.pem
+          sed 's/__DOMAIN__/carfolk-ci.invalid/g' infra/nginx/carfolk.conf.template | sudo tee /etc/nginx/sites-available/carfolk-ci.conf >/dev/null
+          sudo rm -f /etc/nginx/sites-enabled/default
+          sudo ln -s /etc/nginx/sites-available/carfolk-ci.conf /etc/nginx/sites-enabled/carfolk-ci.conf
+          sudo nginx -t
+      - name: Check conservative SEO preview state
+        run: |
+          grep -q '<meta name="robots" content="noindex,nofollow"' apps/web/index.html
+          grep -q 'Disallow: /' apps/web/public/robots.txt
+          grep -q 'CARFOLK_SEO_ENABLED=false' apps/api/.env.production.example
+          grep -q 'CARFOLK_LEADS_ENABLED=false' apps/api/.env.production.example
