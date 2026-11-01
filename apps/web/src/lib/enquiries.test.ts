@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {countErrors,EMPTY_DRAFT,intentFromQuery,todayInNairobi,validateEnquiry,type EnquiryDraft} from './enquiries';
+import {countErrors,EMPTY_DRAFT,intentFromQuery,todayInNairobi,timeInNairobi,validateEnquiry,type EnquiryDraft} from './enquiries';
 const good:EnquiryDraft={...EMPTY_DRAFT,kind:'vehicle',vehicleId:'prado',name:'Jane Doe',phone:'0712345678',email:'',message:'Please share a little more information about this vehicle.',consent:true};
 describe('enquiry validation',()=>{
  it('accepts properly completed vehicle enquiry and +254 format',()=>{
@@ -22,6 +22,14 @@ describe('enquiry validation',()=>{
  });
  it('uses Africa/Nairobi for scheduling',()=>{
   expect(todayInNairobi(new Date('2026-10-31T22:30:00Z'))).toBe('2026-11-01');
+ });
+ it('rejects earlier viewing times today in Nairobi and invalid calendar dates',()=>{
+  const v={...good,kind:'test-drive' as const,preferredDate:'2026-11-01',preferredTime:'11:30'};
+  expect(validateEnquiry(v,'2026-11-01','12:00').preferredTime).toMatch(/future viewing time/);
+  expect(validateEnquiry({...v,preferredTime:'12:00'},'2026-11-01','12:00').preferredTime).toBeTruthy();
+  expect(validateEnquiry({...v,preferredTime:'12:01'},'2026-11-01','12:00')).toEqual({});
+  expect(validateEnquiry({...v,preferredDate:'2026-02-30'},'2026-01-01','11:00').preferredDate).toBeTruthy();
+  expect(timeInNairobi(new Date('2026-10-31T22:30:00Z'))).toBe('01:30');
  });
  it('does not accept honeypot input',()=>expect(validateEnquiry({...good,website:'spam'},'2026-10-31').website).toBeTruthy());
  it('recognizes only defined enquiry intent values',()=>{expect(intentFromQuery('test-drive')).toBe('test-drive');expect(intentFromQuery('vehicle')).toBe('vehicle');expect(intentFromQuery('unknown')).toBe('general')});

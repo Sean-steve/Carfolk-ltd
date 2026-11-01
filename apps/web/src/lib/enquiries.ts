@@ -1,6 +1,6 @@
 /**
- * Single-dealership enquiry contract. Phase 3 is a frontend-only preview.
- * Nothing in this module sends/stores customer contact information.
+ * Single-dealership enquiry validation shared by the contact and viewing UI.
+ * Submission is handled by the explicitly enabled, authoritative Laravel API.
  */
 export type EnquiryKind='general'|'vehicle'|'test-drive';
 export type EnquiryDraft={
@@ -25,7 +25,13 @@ export function todayInNairobi(now=new Date()):string {
  const find=(type:string)=>parts.find(p=>p.type===type)?.value??'';
  return [find('year'),find('month'),find('day')].join('-');
 }
-export function validateEnquiry(draft:EnquiryDraft,today=todayInNairobi()):FormErrors{
+export function timeInNairobi(now=new Date()):string {
+ const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Nairobi',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+ const parts=fmt.formatToParts(now);
+ const find=(type:string)=>parts.find(p=>p.type===type)?.value??'';
+ return [find('hour'),find('minute')].join(':');
+}
+export function validateEnquiry(draft:EnquiryDraft,today=todayInNairobi(),currentTime=timeInNairobi()):FormErrors{
  const errors:FormErrors={};
  const trimmedName=draft.name.trim();
  if(trimmedName.length<2||trimmedName.length>80)errors.name='Enter your full name (2–80 characters).';
@@ -37,8 +43,14 @@ export function validateEnquiry(draft:EnquiryDraft,today=todayInNairobi()):FormE
  if(draft.kind!=='general'&&!draft.vehicleId)errors.vehicleId='Choose an example vehicle.';
  if(draft.message.trim().length<10||draft.message.trim().length>1000)errors.message='Enter a message between 10 and 1,000 characters.';
  if(draft.kind==='test-drive'){
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(draft.preferredDate)||draft.preferredDate<today)errors.preferredDate='Choose today or a future date.';
-  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(draft.preferredTime))errors.preferredTime='Choose a preferred time.';
+  const dateFormat=/^\d{4}-\d{2}-\d{2}$/.test(draft.preferredDate);
+  const parsed=dateFormat?new Date(draft.preferredDate+'T00:00:00Z'):null;
+  const dateValid=!!parsed&&!Number.isNaN(parsed.getTime())&&parsed.toISOString().slice(0,10)===draft.preferredDate;
+  const timeValid=/^([01]\d|2[0-3]):[0-5]\d$/.test(draft.preferredTime);
+  if(!dateValid||draft.preferredDate<today)errors.preferredDate='Choose today or a future valid date.';
+  if(!timeValid)errors.preferredTime='Choose a preferred time.';
+  else if(dateValid&&draft.preferredDate===today&&draft.preferredTime<=currentTime)
+   errors.preferredTime='Choose a future viewing time (East Africa Time).';
  }
  if(!draft.consent)errors.consent='Please agree to be contacted about this enquiry.';
  if(draft.website.trim())errors.website='This request cannot be accepted.';

@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react';
 import {ArrowRight,ArrowUpRight,CalendarDays,Check,ChevronLeft,ChevronRight,Fuel,GitCompareArrows,Gauge,Info,MapPin,Settings2,Share2,Tag,X} from 'lucide-react';
 import {Shell} from '../components/Shell';
+import {NoticeToast} from '../components/NoticeToast';
 import {PreviewPhoto} from '../components/PreviewPhoto';
 import {useVehicle} from '../api/hooks';
 import {kes,vehicleName} from '../api/client';
@@ -62,6 +63,6 @@ export function VehicleDetailPage({slug}:{slug:string}){
   </aside></div>
   </div>
   {expanded&&<div className="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Vehicle photographs" onMouseDown={e=>{if(e.target===e.currentTarget)setExpanded(false)}}><button className="gallery-lightbox__close" onClick={()=>setExpanded(false)} aria-label="Close gallery"><X size={26}/></button><div className="gallery-lightbox__image"><PreviewPhoto src={photo?.url??''} alt={photo?.alt_text??'Vehicle photograph'}/></div><div className="gallery-lightbox__controls"><button onClick={()=>next(-1)} aria-label="Previous photo"><ChevronLeft/></button><span>Image {index+1} of {photoCount}</span><button onClick={()=>next(1)} aria-label="Next photo"><ChevronRight/></button></div></div>}
-  {notice&&<div className="toast" role="status"><Info size={18}/>{notice}<button onClick={()=>setNotice('')} aria-label="Close"><X size={15}/></button></div>}
+  {notice&&<NoticeToast message={notice} onDismiss={()=>setNotice('')}/>} 
  </Shell>;
 }

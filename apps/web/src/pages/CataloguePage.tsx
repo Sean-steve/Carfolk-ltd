@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import {ArrowRight,CarFront,ChevronDown,Filter,Info,Search,SlidersHorizontal,X} from 'lucide-react';
 import {Shell} from '../components/Shell';
+import {NoticeToast} from '../components/NoticeToast';
 import {ListingCard} from '../components/ListingCard';
 import {useOptions,useVehicles} from '../api/hooks';
 import {EMPTY_FILTERS,filtersFromQuery,filtersToApi,filtersToQuery,type Filters} from '../lib/catalogue';
@@ -61,6 +62,6 @@ export function CataloguePage({query}:{query:string}){
     {!!data?.meta&&data.meta.last_page>1&&<nav className="catalogue-more" aria-label="Vehicle result pages"><p>Page {data.meta.current_page} of {data.meta.last_page} · {data.meta.total} vehicles</p><div className="catalogue-page-controls">{page>1&&<a className="button button--outline" href={href(filters,page-1)}>← Previous page</a>}{page<data.meta.last_page&&<a className="button button--primary" href={href(filters,page+1)}>Next page →</a>}</div></nav>}
    </section>
   </div>
-  {notice&&<div className="toast" role="status"><Info size={18}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Dismiss"><X size={16}/></button></div>}
+  {notice&&<NoticeToast message={notice} onDismiss={()=>setNotice('')}/>} 
  </Shell>;
 }

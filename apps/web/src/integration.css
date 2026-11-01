@@ -1,1 +1,10 @@
 .enquiry-fieldset{margin:0;padding:0;border:0;min-width:0}.enquiry-fieldset:disabled{opacity:.56;cursor:not-allowed}.enquiry-fieldset:disabled input,.enquiry-fieldset:disabled textarea{cursor:not-allowed}.catalogue-page-controls{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}.catalogue-results .catalogue-no-results{margin:22px 0}.vehicle-empty .button{margin-top:15px}.catalogue-listing-grid .listing-card__photo{height:190px}.listing-card__price strong{font-size:19px}@media(max-width:620px){.catalogue-listing-grid .listing-card__photo{height:220px}}
+/* Unified, transient customer notifications (including motion-reduced support). */
+.notice-toast{animation:notice-enter .24s ease-out both;transition:opacity .26s ease,transform .26s ease;align-items:center}
+.notice-toast>span{flex:1;line-height:1.5}
+.notice-toast--success{border-left-color:#36c981}
+.notice-toast--success>svg{color:#5ee3a2}
+.notice-toast--error{border-left-color:#ff8d72}
+.notice-toast--error>svg{color:#ffbaa5}
+.notice-toast--closing{opacity:0;transform:translateY(14px)}
+@keyframes notice-enter{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
