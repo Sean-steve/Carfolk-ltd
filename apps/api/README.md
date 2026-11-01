@@ -138,6 +138,27 @@ The catalogue will initially be **empty**. Log in at `/manage/login`, add a real
 
 To stop only the database container (without deleting data), use `docker compose down` from `apps/api`. For details on the routes, see the API section below.
 
+## Add five vehicles to your local admin
+
+Once `php artisan migrate` has **succeeded** and Laravel is using the **Carfolk** PostgreSQL database, run the following from `apps/api`:
+
+```bash
+php artisan carfolk:local-inventory
+```
+
+The command creates **five ordinary vehicle listings** with realistic editable fields (Toyota Land Cruiser Prado, Mazda CX-5, Toyota RAV4, Subaru Forester, Honda Fit). They have conventional stock references `CF-1001` to `CF-1005` and no preview badges on their admin entries.
+
+- Open **http://127.0.0.1:8000/manage/vehicles** to view, edit, change prices or status, upload photos, publish or archive them.
+- Entries start as **unpublished drafts**. To view them on **http://localhost:5173/#/cars**, open each vehicle in the admin, select **Available** and **Publish publicly**.
+- To create already-published entries on the **first run only**, use `php artisan carfolk:local-inventory --publish`. An existing draft will not be modified when rerunning with `--publish`; publish it manually in the admin.
+- You can safely rerun the command: it **skips existing stock references** and never overwrites administrator edits or photos.
+- The command refuses production environments, external database hosts and database names other than `carfolk` (or CI test database `carfolk_test`).
+- **No photographs are invented or imported**. Upload appropriate images through the admin. Vehicle details and prices are illustrative for local operation only: replace them with verified Carfolk inventory before any public deployment.
+
+If you share PostgreSQL with Deetoo, keep Carfolk's Docker service mapped to its own free host port (e.g. `127.0.0.1:5434:5432` in `compose.yaml`, and `DB_PORT=5434` in your local `.env`). Do not stop or reset Deetoo's database.
+
+**Important:** GitHub cannot write to your laptop database. First `git pull origin main`, then run the command locally. This is deliberately not part of `DatabaseSeeder` and cannot run during a production deployment.
+
 ## API
 - `GET /api/v1/vehicles`, `GET /api/v1/vehicles/{slug}`, `GET /api/v1/site`.
 - `POST /api/v1/enquiries`, `POST /api/v1/test-drives` (rate-limited).
