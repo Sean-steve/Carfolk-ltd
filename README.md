@@ -33,8 +33,38 @@ npm run dev
 npm run typecheck && npm run test && npm run build
 ```
 
-### Start the backend
-See [Backend README](apps/api/README.md) for PostgreSQL Docker setup, Composer installation, migrations, admin provisioning and server startup.
+### Start the backend (local Laravel + PostgreSQL)
+
+Use **two terminals** — one for Laravel (port 8000), the other for the frontend (port 5173). Prerequisites: PHP 8.3+, Composer 2, Docker Engine + Compose.
+
+**Terminal 1 — from repository root:**
+
+```bash
+cd apps/api
+export CARFOLK_LOCAL_DB_PASSWORD='choose-your-own-local-db-password'
+docker compose up -d postgres
+cp -n .env.example .env
+nano .env                          # Set DB_PASSWORD to the password above
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan storage:link
+php artisan carfolk:admin         # Creates your administrator account interactively
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+**Terminal 2 — frontend (already running? Leave it running):**
+
+```bash
+cd apps/web
+npm ci
+npm run dev
+```
+
+Visit **http://127.0.0.1:8000/manage/login** for the admin dashboard, or **http://localhost:5173/#/cars** for the public catalogue. The Vite development proxy automatically connects `/api` and `/storage` to Laravel on port 8000. Add a vehicle in the admin and **publish** it to see it on the website. An empty catalogue at first is expected.
+
+**Setup details, environment values and troubleshooting:** [Full backend setup guide](apps/api/README.md#local-development--ubuntulinux-works-with-the-react-frontend).
+
 
 ### Phase 5 cross-system integration
 
