@@ -15,6 +15,9 @@ test('real PostgreSQL vehicle → enquiry → viewing → administrator → sold
  await expect(page.getByRole('heading',{name:'Toyota RAV4'})).toBeVisible();
  await expect(page.getByText('KES 4,250,000').first()).toBeVisible();
  await page.getByRole('link',{name:'Enquire about this car'}).click();
+ await expect(page.getByText('Local enquiry testing is enabled.')).toHaveCount(0);
+ await expect(page.getByText('Your reference is')).toHaveCount(0);
+
  await expect(page.getByText('Toyota RAV4 · 2022')).toBeVisible();
  await page.locator('#enquiry-name').fill('Certification Buyer');
  await page.locator('#enquiry-phone').fill('0712345678');
@@ -22,6 +25,8 @@ test('real PostgreSQL vehicle → enquiry → viewing → administrator → sold
  await page.locator('input[type=checkbox]').check();
  await page.getByRole('button',{name:/Send enquiry/i}).click();
  await expect(page.getByText('Enquiry received by Carfolk.')).toBeVisible();
+ await expect(page.getByText('Your reference is')).toHaveCount(0);
+
  await page.goto('/#/cars/ci-toyota-rav4');
  await page.locator('.detail-purchase').getByRole('link',{name:/Request a viewing/i}).click();
  await expect(page).toHaveURL(/vehicle=ci-toyota-rav4/);
@@ -40,6 +45,8 @@ test('real PostgreSQL vehicle → enquiry → viewing → administrator → sold
  await page.locator('#password').fill(password!);
  await page.getByRole('button',{name:/Sign in to dashboard/i}).click();
  await expect(page.getByRole('heading',{name:'Dealership Overview'})).toBeVisible();
+ await expect(page.getByText('Environment note:')).toHaveCount(0);
+
  await page.getByRole('link',{name:'Customer Enquiries',exact:true}).click();
  await expect(page.getByText('Certification Buyer').first()).toBeVisible();
  const enquiryRow=page.locator('tr').filter({hasText:'Certification Buyer'}).first();

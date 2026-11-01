@@ -5,7 +5,7 @@
 @section('content')
  <form class="panel admin-edit" method="post" action="{{ $mode==='create'?route('manage.vehicles.store'):route('manage.vehicles.update',$vehicle) }}">
   @csrf @if($mode==='edit')@method('PATCH')@endif
-  <div class="panel-head"><h2>Vehicle details</h2><p>Provide accurate information. Drafts remain private until you publish them.</p></div>
+  <div class="panel-head"><h2>Vehicle details</h2></div>
   <div class="fields-grid">
    <label>Stock reference *<input name="stock_reference" maxlength="60" required value="{{ old('stock_reference',$vehicle->stock_reference) }}" placeholder="e.g. CF-0001"></label>
    <label>Make *<input name="make" maxlength="80" required value="{{ old('make',$vehicle->make) }}" placeholder="Toyota"></label>
@@ -31,7 +31,7 @@
   <div class="form-actions"><button type="submit" class="btn btn-primary">{{ $mode==='create'?'Create vehicle':'Save changes' }} →</button><a href="{{ route('manage.vehicles.index') }}" class="btn btn-outline">Cancel</a></div>
  </form>
  @if($mode==='edit')
- <section class="panel image-panel"><div class="panel-head"><h2>Vehicle photos</h2><p>Select up to 5 JPEG, PNG or WebP photos per upload (8 MB each). Maximum 20 total per vehicle. Upload again to add more.</p><p>{{ $vehicle->images->count() }} / 20 photos added.</p></div>
+ <section class="panel image-panel"><div class="panel-head"><h2>Vehicle photos <small>({{ $vehicle->images->count() }}/20)</small></h2></div>
   <div class="vehicle-images">
    @forelse($vehicle->images as $image)
    <div class="vehicle-image"><img src="{{ \Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" alt="{{ $image->alt_text??'Vehicle photograph' }}"><div class="vehicle-image__meta">@if($image->is_primary)<span class="pill pill-available">Primary</span>@endif<form method="post" action="{{ route('manage.vehicles.photos.remove',[$vehicle,$image]) }}">@csrf @method('DELETE')<button type="submit">Remove</button></form></div></div>
@@ -39,9 +39,9 @@
    @endforelse
   </div>
   <form class="photo-upload" method="post" enctype="multipart/form-data" action="{{ route('manage.vehicles.photos.add',$vehicle) }}">@csrf
-   <label>Choose photos (1–5 per upload)<input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required></label>
+   <label>Choose photos (up to 5 JPEG, PNG or WebP; 8 MB each)<input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required></label>
    <label>Alternative text<input name="alt_text" maxlength="200" placeholder="e.g. Front view of vehicle"></label>
-   <button type="submit" class="btn btn-primary">Upload selected photos</button><p class="small-label">If uploading several large files fails, check PHP upload_max_filesize and post_max_size. Total request must fit your server limits.</p>
+   <button type="submit" class="btn btn-primary">Upload selected photos</button>
   </form>
  </section>
  @endif

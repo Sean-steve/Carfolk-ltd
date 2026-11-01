@@ -199,3 +199,7 @@
  .contact-aside__panel{grid-column:auto}
  .privacy-page__section,.privacy-page__next{padding:22px}
 }
+
+/* The enquiry form fills available space when no dealership location is configured. */
+.contact-content__grid--solo{grid-template-columns:minmax(0,1fr)}
+.contact-content__grid--solo .enquiry-form-card{max-width:880px;width:100%}

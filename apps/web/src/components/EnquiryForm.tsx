@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState,type ChangeEvent,type FormEvent} from 'react';
-import {ArrowRight,CheckCircle2,Info,MessageCircle,Send,ShieldCheck} from 'lucide-react';
+import {ArrowRight,CheckCircle2,Info,MessageCircle,Send} from 'lucide-react';
 import {getVehicle,submitEnquiry,ApiError,type Vehicle} from '../api/client';
 import {useRemote,useSite} from '../api/hooks';
 import {EMPTY_DRAFT,countErrors,todayInNairobi,validateEnquiry,type EnquiryDraft,type EnquiryKind,type FormErrors} from '../lib/enquiries';
@@ -67,13 +67,12 @@ export function EnquiryForm({intent,vehicleSlug}:Props){
  }
  const invalid=(field:keyof EnquiryDraft)=>errors[field]?true:undefined;
  return <div className="enquiry-form-card" id="enquiry-form">
-  <div className="enquiry-form-card__heading"><div><span className="eyebrow eyebrow--red">CUSTOMER ENQUIRIES</span><h2>How can we help?</h2><p>Send a question or request a viewing. A viewing is only confirmed after the dealership responds.</p></div><div className="enquiry-form-card__icon"><MessageCircle size={28}/></div></div>
+  <div className="enquiry-form-card__heading"><div><span className="eyebrow eyebrow--red">CUSTOMER ENQUIRIES</span><h2>How can we help?</h2></div><div className="enquiry-form-card__icon"><MessageCircle size={28}/></div></div>
   <div className="enquiry-modes" role="group" aria-label="Enquiry type">{modes.map(mode=><button type="button" key={mode.value} className={intent===mode.value?'is-selected':''} onClick={()=>choose(mode.value)} aria-pressed={intent===mode.value}><span>{mode.title}</span><small>{mode.detail}</small></button>)}</div>
-  {site?.test_mode&&<div className="enquiry-form-card__warning" role="status"><Info size={19}/><div><strong>Local enquiry testing is enabled.</strong><p>Use invented names and contact details only. Requests are saved in your local database and appear in the admin inbox. This is not a public customer service.</p></div></div>}
-  {!live&&<div className="enquiry-form-card__warning" role="status"><Info size={19}/><div><strong>Customer submissions are not enabled.</strong><p>Requests are disabled until the dealership enables customer submissions. For local testing, set CARFOLK_LOCAL_ENQUIRIES_ENABLED=true in Laravel .env, restart Laravel and use invented contact information only. Production requires an approved privacy notice.</p></div></div>}
-  {intent!=='general'&&!vehicleLoading&&!vehicle&&<div className="enquiry-form-card__warning"><Info size={19}/><div><strong>Choose a vehicle first.</strong><p>{vehicleError??'Select a published car from the catalogue before requesting a vehicle enquiry or viewing.'} <a href="#/cars">Browse cars →</a></p></div></div>}
-  {intent==='test-drive'&&vehicle&&vehicle.status!=='available'&&<div className="enquiry-form-card__warning"><Info size={19}/><div><strong>Viewing unavailable for this vehicle.</strong><p>Its current status is {vehicle.status}. You can send a general enquiry instead.</p></div></div>}
-  {vehicle&&<div className="finance-linked"><Info size={18}/><div><strong>{vehicle.make} {vehicle.model} · {vehicle.year}</strong><small>Carfolk published listing · {vehicle.status}</small></div></div>}
+  {!live&&<div className="enquiry-form-card__warning" role="status"><Info size={19}/><div><strong>Enquiries are currently unavailable.</strong></div></div>}
+  {intent!=='general'&&!vehicleLoading&&!vehicle&&<div className="enquiry-form-card__warning"><Info size={19}/><div><strong>{vehicleError?'Vehicle unavailable.':'Select a vehicle.'}</strong><p><a href="#/cars">Browse cars →</a></p></div></div>}
+  {intent==='test-drive'&&vehicle&&vehicle.status!=='available'&&<div className="enquiry-form-card__warning"><Info size={19}/><div><strong>Viewing unavailable for this vehicle.</strong></div></div>}
+  {vehicle&&<div className="finance-linked"><Info size={18}/><div><strong>{vehicle.make} {vehicle.model} · {vehicle.year}</strong><small>{vehicle.status}</small></div></div>}
   <form className="enquiry-form" onSubmit={submit} noValidate>
    <fieldset disabled={!canSubmit||sending} className="enquiry-fieldset">
    <div className="enquiry-form__grid">
@@ -84,12 +83,11 @@ export function EnquiryForm({intent,vehicleSlug}:Props){
     <div className="enquiry-field enquiry-field--full"><label htmlFor="enquiry-message">Your message <em>*</em></label><textarea id="enquiry-message" value={draft.message} onChange={input('message')} maxLength={1000} rows={5} required aria-invalid={invalid('message')} placeholder="Tell the dealership what you would like to know…"/><div className="enquiry-field__counter">{draft.message.length}/1000</div>{errors.message&&<span className="enquiry-error" role="alert">{errors.message}</span>}</div>
    </div>
    <label className="enquiry-consent"><input type="checkbox" checked={draft.consent} onChange={e=>update('consent',e.target.checked)} aria-invalid={invalid('consent')}/><span>{site?.test_mode?'I agree to store invented test details in my local Carfolk database. I have read the':'I agree to Carfolk using my details to respond to this enquiry. I have read the'} <a href={site?.privacy_url??'#/privacy'} target={site?.privacy_url?'_blank':undefined} rel={site?.privacy_url?'noopener noreferrer':undefined}>privacy notice</a>. <b>*</b></span></label>{errors.consent&&<span className="enquiry-error" role="alert">{errors.consent}</span>}
-   <p className="enquiry-form__footer"><ShieldCheck size={16}/> {site?.test_mode?'Use invented test details only; records are saved to your local database.':'Details are transmitted to Carfolk only after you submit this form.'}</p>
    <button className="button button--primary enquiry-submit" type="submit" disabled={!canSubmit||sending}><Send size={17}/>{sending?'Sending request…':intent==='test-drive'?'Request viewing':'Send enquiry'} <ArrowRight size={17}/></button>
    </fieldset>
   </form>
   <div className={'enquiry-feedback'+(success?' enquiry-feedback--ok':'')} tabIndex={-1} ref={alertRef} aria-live="polite" aria-atomic="true">
-   {success?<><CheckCircle2 size={23}/><div><strong>{intent==='test-drive'?'Viewing request received — awaiting confirmation.':site?.test_mode?'Test enquiry saved in your local Carfolk database.':'Enquiry received by Carfolk.'}</strong><p>Your reference is {success.id}. The team can view the request in its administration inbox. No viewing is confirmed automatically.</p></div></>:
+   {success?<><CheckCircle2 size={23}/><div><strong>{intent==='test-drive'?'Viewing request received — awaiting confirmation.':'Enquiry received by Carfolk.'}</strong></div></>:
     feedback?<><Info size={20}/><div><strong>Could not complete the request</strong><p>{feedback}</p></div></>:null}
   </div>
  </div>;
