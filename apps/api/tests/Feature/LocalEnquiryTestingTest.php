@@ -31,7 +31,7 @@ class LocalEnquiryTestingTest extends TestCase {
      $this->getJson('/api/v1/site')->assertOk()
        ->assertJsonPath('data.leads_enabled',true)
        ->assertJsonPath('data.test_mode',true)
-       ->assertJsonPath('data.privacy_url','http://localhost/local/privacy');
+       ->assertJsonPath('data.privacy_url',url('/local/privacy'));
      $this->get('/local/privacy')->assertOk()->assertSee('testing only',false);
      $this->postJson('/api/v1/enquiries',[
        'name'=>'Local Test','phone'=>'0712345678',
