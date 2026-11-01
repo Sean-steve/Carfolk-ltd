@@ -6,9 +6,9 @@ export function PrivacyPage(){
  return <Shell><section className="catalogue-intro catalogue-intro--compact"><div className="container catalogue-intro__inner"><div className="catalogue-breadcrumb"><a href="#/">Home</a><ChevronRight size={14}/> Privacy</div><span className="eyebrow">YOUR DATA</span><h1>Privacy &amp; <em>transparency.</em></h1><p>How we handle customer information.</p></div></section>
   <article className="container privacy-page">
    <div className="privacy-page__alert"><Info size={23}/><div>
-    <strong>{site?.leads_enabled?'Approved privacy policy is available.':'Lead collection is currently disabled.'}</strong>
-    <p>{site?.leads_enabled?'Review the dealership’s approved privacy notice before sending an enquiry.':'The customer forms on this website are disabled until a live service and approved privacy notice are provided. This page is not a substitute for the dealership’s formal privacy policy.'}</p>
-    {site?.privacy_url&&<a className="button button--outline" target="_blank" rel="noopener noreferrer" href={site.privacy_url}>Read official privacy policy ↗</a>}
+    <strong>{site?.test_mode?'Local developer testing only.':site?.leads_enabled?'Approved privacy policy is available.':'Lead collection is currently disabled.'}</strong>
+    <p>{site?.test_mode?'This is a local-only testing environment: use invented details, never real customer information. Test submissions are saved in the local database.':site?.leads_enabled?'Review the dealership’s approved privacy notice before sending an enquiry.':'The customer forms on this website are disabled until a live service and approved privacy notice are provided. This page is not a substitute for the dealership’s formal privacy policy.'}</p>
+    {site?.privacy_url&&<a className="button button--outline" target="_blank" rel="noopener noreferrer" href={site.privacy_url}>{site?.test_mode?'Read local test-data notice ↗':'Read official privacy policy ↗'}</a>}
    </div></div>
    <div className="privacy-page__grid">
     <div className="privacy-page__section"><LockKeyhole size={27}/><h2>Enquiry information</h2><p>When enabled, forms request your name, Kenyan phone number, optional email, message and your selected vehicle. Viewing requests also include your preferred date and time.</p><p>These details are sent to the Carfolk dealership server when you explicitly submit and consent.</p></div>

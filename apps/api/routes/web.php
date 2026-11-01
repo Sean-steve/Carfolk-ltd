@@ -5,12 +5,18 @@ use App\Http\Controllers\Admin\VehicleAdminController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\SiteAdminController;
 use Illuminate\Support\Facades\Route;
+use App\Support\LeadAcceptance;
+use Illuminate\Http\Request;
 use App\Http\Controllers\SeoController;
 
 Route::get('/robots.txt',[SeoController::class,'robots']);
 Route::get('/sitemap.xml',[SeoController::class,'sitemap']);
 Route::get('/listing/{slug}',[SeoController::class,'listing']);
 
+Route::get('/local/privacy', function(Request $request) {
+    abort_unless(LeadAcceptance::localTestEnabled(),404);
+    return response()->view('local.privacy')->header('Cache-Control','no-store');
+})->name('local.privacy');
 Route::get('/', fn()=>redirect()->route('manage.dashboard'));
 Route::prefix('manage')->name('manage.')->group(function() {
     Route::get('/login',[AuthController::class,'show'])->name('login');

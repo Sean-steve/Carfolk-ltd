@@ -4,6 +4,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use App\Models\SiteSetting;
 use App\Support\VehicleData;
+use App\Support\LeadAcceptance;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 class ShowroomController extends Controller {
@@ -66,8 +67,10 @@ class ShowroomController extends Controller {
  }
  public function site(): JsonResponse {
    return response()->json(['data'=>array_merge(SiteSetting::publicDetails(),[
-     'leads_enabled'=>\App\Support\LeadAcceptance::enabled(),
-     'privacy_url'=>filter_var(config('carfolk.privacy_url'),FILTER_VALIDATE_URL)?config('carfolk.privacy_url'):null,
+     'leads_enabled'=>LeadAcceptance::enabled(),
+     'test_mode'=>LeadAcceptance::mode()==='local-test',
+     'privacy_url'=>LeadAcceptance::mode()==='local-test' ? url('/local/privacy') :
+       (filter_var(config('carfolk.privacy_url'),FILTER_VALIDATE_URL)?config('carfolk.privacy_url'):null),
    ])]);
  }
 }
