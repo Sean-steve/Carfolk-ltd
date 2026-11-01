@@ -52,14 +52,13 @@ export function VehicleDetailPage({slug}:{slug:string}){
    </div>
   </div>
   <aside className="detail-purchase">
-   <div className="detail-purchase__price"><span>Listed price</span><strong>{kes(vehicle.price_kes)}</strong><small>Confirm price and availability with Carfolk before purchase.</small></div>
+   <div className="detail-purchase__price"><span>Listed price</span><strong>{kes(vehicle.price_kes)}</strong></div>
    <div className="detail-purchase__quick"><span><Gauge size={17}/>{vehicle.mileage_km===null?'Mileage unlisted':vehicle.mileage_km.toLocaleString('en-KE')+' km'}</span><span><Fuel size={17}/>{vehicle.fuel_type??'Fuel unlisted'}</span><span><Settings2 size={17}/>{vehicle.transmission??'Transmission unlisted'}</span><span><MapPin size={17}/>{vehicle.location??'Location unlisted'}</span></div>
-   <div className="detail-purchase__note"><Info size={19}/><span>{vehicle.status==='available'?'Vehicle listed as available. Confirm before travelling.':vehicle.status==='reserved'?'Vehicle is currently reserved. Ask about status.':'Vehicle has been marked sold.'}</span></div>
+   <div className="detail-purchase__note"><Info size={19}/><span>{vehicle.status==='available'?'Available':vehicle.status==='reserved'?'Reserved':'Vehicle has been marked sold.'}</span></div>
    {vehicle.status==='available'&&<a className="button button--primary" href={toVehicleViewing(vehicle.slug)}><CalendarDays size={18}/> Request a viewing <ArrowUpRight size={18}/></a>}
    <a className="button button--outline" href={toVehicleEnquiry(vehicle.slug)}>Enquire about this car <ArrowUpRight size={18}/></a>
    <a className="button button--outline" href={'#/finance?vehicle='+encodeURIComponent(vehicle.slug)}><Tag size={18}/> Estimate payments</a>
    <button type="button" className={active?'detail-compare is-active':'detail-compare'} onClick={()=>{if(!toggleCompare(vehicle.id))setNotice('You may compare up to three vehicles.')}}><GitCompareArrows size={18}/>{active?'Remove from comparison':'Add to comparison'}</button>
-   <small className="detail-purchase__disclaimer"><Info size={14}/> Viewing requests are not confirmed appointments until Carfolk responds.</small>
   </aside></div>
   </div>
   {expanded&&<div className="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Vehicle photographs" onMouseDown={e=>{if(e.target===e.currentTarget)setExpanded(false)}}><button className="gallery-lightbox__close" onClick={()=>setExpanded(false)} aria-label="Close gallery"><X size={26}/></button><div className="gallery-lightbox__image"><PreviewPhoto src={photo?.url??''} alt={photo?.alt_text??'Vehicle photograph'}/></div><div className="gallery-lightbox__controls"><button onClick={()=>next(-1)} aria-label="Previous photo"><ChevronLeft/></button><span>Image {index+1} of {photoCount}</span><button onClick={()=>next(1)} aria-label="Next photo"><ChevronRight/></button></div></div>}

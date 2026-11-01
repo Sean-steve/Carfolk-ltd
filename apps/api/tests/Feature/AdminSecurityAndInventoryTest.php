@@ -64,6 +64,20 @@ class AdminSecurityAndInventoryTest extends TestCase {
   $this->assertSame(['Reverse camera','Cruise control'],Vehicle::first()->features);
   $this->get('/manage/vehicles/'.Vehicle::first()->id.'/edit')->assertOk();
  }
+ public function test_admin_screens_do_not_expose_development_instructions():void {
+  $this->actingAs($this->admin());
+  $this->get('/manage')->assertOk()
+    ->assertDontSee('Environment note:')
+    ->assertDontSee('Phase 5 will complete that integration.')
+    ->assertSee('Dealership Overview');
+  $this->get('/manage/vehicles')->assertOk()
+    ->assertDontSee('Drafts and unpublished vehicles stay hidden from customers.');
+  $this->get('/manage/vehicles/create')->assertOk()
+    ->assertDontSee('Provide accurate information. Drafts remain private until you publish them.');
+  $this->get('/manage/enquiries')->assertOk()->assertDontSee('Only authorized dealership administrators can access customer contact details.');
+  $this->get('/manage/viewings')->assertOk()->assertDontSee('Contact the customer and confirm availability first.');
+  $this->get('/manage/settings')->assertOk()->assertDontSee('These details are exposed by the public website API.');
+ }
  public function test_inactive_administrator_is_denied_even_with_session(): void {
   $user=$this->admin();
   $user->update(['is_active'=>false]);

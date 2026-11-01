@@ -28,7 +28,6 @@ export function CataloguePage({query}:{query:string}){
  const chips=(Object.keys(filters) as (keyof Filters)[]).filter(k=>k!=='sort'&&filters[k]);
  return <Shell>
   <section className="catalogue-intro"><div className="container catalogue-intro__inner"><div className="catalogue-breadcrumb"><a href="#/">Home</a><span>/</span> Cars for Sale</div><span className="eyebrow">CARFOLK INVENTORY</span><h1>Find a car that<br/><em>fits your life.</em></h1><p>Discover published dealership vehicles, compare their specifications and get in touch.</p></div></section>
-  <div className="container catalogue-banner"><Info size={18}/><div><strong>Published Carfolk inventory</strong><span>Only vehicles added and published by the dealership will appear. Availability can change; confirm details before visiting.</span></div></div>
   <div className="container catalogue-shell">
    <aside className={'catalogue-sidebar'+(mobileOpen?' catalogue-sidebar--open':'')} aria-label="Vehicle filters">
     <div className="catalogue-sidebar__top"><div><SlidersHorizontal size={21}/><strong>Refine your search</strong></div><button type="button" className="catalogue-sidebar__close" aria-label="Close filters" onClick={()=>setMobileOpen(false)}><X size={20}/></button></div>
@@ -50,17 +49,16 @@ export function CataloguePage({query}:{query:string}){
     </form>
    </aside>
    <section className="catalogue-results" aria-label="Search results">
-    <div className="catalogue-results__header"><div><span className="eyebrow eyebrow--red">DISCOVER YOUR NEXT VEHICLE</span><h2>Cars for Sale <span>({data?.meta.total??'—'})</span></h2><p>Only published vehicles are included in search results.</p></div>
+    <div className="catalogue-results__header"><div><span className="eyebrow eyebrow--red">DISCOVER YOUR NEXT VEHICLE</span><h2>Cars for Sale <span>({data?.meta.total??'—'})</span></h2></div>
      <div className="catalogue-actions"><button className="catalogue-mobile-filter" type="button" onClick={()=>setMobileOpen(true)} aria-expanded={mobileOpen}><SlidersHorizontal size={17}/> Filters</button>
       <label htmlFor="sort">Sort by<select id="sort" value={filters.sort} onChange={e=>patch('sort',e.target.value as SortBy)}><option value="recent">Latest / featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="year-desc">Newest model year</option><option value="mileage-asc">Lowest mileage</option></select></label></div></div>
     <div className="catalogue-pills"><button type="button" className={!filters.body&&!filters.maxPrice?'is-active':''} onClick={clear}>All cars</button><button type="button" className={filters.body==='SUV'?'is-active':''} onClick={()=>patch('body','SUV')}>SUVs</button><button type="button" className={filters.body==='Hatchback'?'is-active':''} onClick={()=>patch('body','Hatchback')}>Hatchbacks</button><button type="button" className={filters.maxPrice==='2000000'?'is-active':''} onClick={()=>patch('maxPrice','2000000')}>Under KES 2M</button></div>
     {!!chips.length&&<div className="catalogue-chips">{chips.map(k=><button type="button" key={k} onClick={()=>patch(k,'')}>{labels[k]}: {filters[k]} <X size={13}/></button>)}</div>}
     {loading?<div className="catalogue-no-results" role="status"><h3>Loading Carfolk vehicles…</h3></div>:
-     !ready||error?<div className="catalogue-no-results"><Info size={40}/><h3>Live catalogue unavailable</h3><p>{error??'No backend is configured for this static preview.'} No fictitious listings have been substituted.</p></div>:
+     !ready||error?<div className="catalogue-no-results"><Info size={40}/><h3>Live catalogue unavailable</h3><p>{error??'Please try again shortly.'}</p></div>:
      result.length?<div className="catalogue-listing-grid">{result.map(car=><ListingCard key={car.id} car={car} onLimit={()=>setNotice('Choose up to three vehicles to compare.')}/>)}</div>:
-     <div className="catalogue-no-results"><CarFront size={40}/><h3>No matching published vehicles</h3><p>Try wider filters. The dealership may not have published inventory yet.</p><button className="button button--primary" type="button" onClick={clear}>Clear filters</button></div>}
+     <div className="catalogue-no-results"><CarFront size={40}/><h3>No matching vehicles</h3><button className="button button--primary" type="button" onClick={clear}>Clear filters</button></div>}
     {!!data?.meta&&data.meta.last_page>1&&<nav className="catalogue-more" aria-label="Vehicle result pages"><p>Page {data.meta.current_page} of {data.meta.last_page} · {data.meta.total} vehicles</p><div className="catalogue-page-controls">{page>1&&<a className="button button--outline" href={href(filters,page-1)}>← Previous page</a>}{page<data.meta.last_page&&<a className="button button--primary" href={href(filters,page+1)}>Next page →</a>}</div></nav>}
-    <div className="catalogue-guidance"><Info size={18}/><p>All listed information is dealership-entered. Verify availability, condition and final pricing directly before making a decision.</p></div>
    </section>
   </div>
   {notice&&<div className="toast" role="status"><Info size={18}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Dismiss"><X size={16}/></button></div>}

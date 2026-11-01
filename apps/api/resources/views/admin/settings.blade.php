@@ -2,7 +2,7 @@
 @section('title','Dealership Settings')
 @section('eyebrow','PUBLIC BUSINESS PROFILE')
 @section('content')
-<div class="panel"><div class="panel-head"><h2>Verified contact and company details</h2><p>Only publish information that Carfolk LTD has confirmed. These details are exposed by the public website API.</p></div>
+<div class="panel"><div class="panel-head"><h2>Business profile</h2></div>
 <form method="post" action="{{ route('manage.settings.update') }}" class="admin-edit">@csrf @method('PATCH')
  <div class="fields-grid">
   <label>Business name *<input name="name" required maxlength="130" value="{{ old('name',$site->name) }}"></label>

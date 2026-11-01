@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState} from 'react';
-import {ArrowRight,BadgeInfo,Calculator,Check,ChevronRight,Info,Landmark,ShieldCheck} from 'lucide-react';
+import {ArrowRight,BadgeInfo,Calculator,ChevronRight,Info,Landmark} from 'lucide-react';
 import {Shell} from '../components/Shell';
 import {getVehicle,kes} from '../api/client';
 import {useRemote} from '../api/hooks';
@@ -16,7 +16,7 @@ export function FinancingPage({query}:{query:string}){
    <div className="detail-preview-banner"><Info size={20}/><span><strong>Illustrative only:</strong> This calculator is not a financing offer, lender quote, credit approval or statement of actual loan rates. Fees and charges are excluded.</span></div>
    <div className="finance-page__intro"><div><span className="eyebrow eyebrow--red">FINANCING PLANNER</span><h2>Estimate what your monthly payments could look like.</h2><p>Adjust deposit, interest assumptions and the repayment period to model your budget.</p></div><div className="finance-page__icon"><Calculator size={40}/></div></div>
    <div className="finance-page__grid"><form className="finance-fields" onSubmit={e=>e.preventDefault()}>
-    <div className="finance-fields__heading"><h3>Build your estimate</h3><p>Planning only — no financial or personal data is submitted.</p></div>
+    <div className="finance-fields__heading"><h3>Build your estimate</h3></div>
     {slug&&<div className="finance-linked"><BadgeInfo size={18}/><div><strong>{linked?linked.make+' '+linked.model:loading?'Loading listed vehicle…':'Vehicle unavailable'}</strong><small>{linked?'Using the current published price as a starting amount.':error??'Enter an amount below to estimate.'}</small></div></div>}
     <label className="finance-control">Vehicle amount (KES)<input type="number" min="100000" max="100000000" step="50000" value={price} onChange={e=>setPrice(Math.min(100000000,Math.max(100000,Number(e.target.value)||100000)))}/></label>
     <div className="finance-control"><div className="finance-control__header"><label htmlFor="deposit">Deposit percentage</label><strong>{deposit}% · {kes(result.depositAmount)}</strong></div><input id="deposit" type="range" min="0" max="90" step="5" value={deposit} onChange={e=>setDeposit(Number(e.target.value))}/><div className="finance-range"><span>0%</span><span>90%</span></div></div>
@@ -28,10 +28,8 @@ export function FinancingPage({query}:{query:string}){
     <div className="finance-result__meter" role="img" aria-label={`Deposit ${deposit}%, loan ${100-deposit}%`}><div style={{width:deposit+'%'}}/></div>
     <div className="finance-result__legend"><span><i/> Deposit {deposit}%</span><span><i/> Financed {100-deposit}%</span></div>
     <dl><div><dt>Vehicle amount</dt><dd>{kes(price)}</dd></div><div><dt>Deposit</dt><dd>{kes(Math.round(result.depositAmount))}</dd></div><div><dt>Financed principal</dt><dd>{kes(Math.round(result.principal))}</dd></div><div><dt>Total estimated interest</dt><dd>{kes(Math.round(result.totalInterest))}</dd></div><div className="finance-result__grand"><dt>Estimated total incl. deposit</dt><dd>{kes(Math.round(result.totalCost))}</dd></div></dl>
-    <div className="finance-result__warn"><ShieldCheck size={18}/><span>Fixed-rate, monthly amortization only. Actual finance and eligibility depend on a lender's approved terms.</span></div>
     <a href="#/contact" className="button button--primary">Contact Carfolk <ArrowRight size={18}/></a>
    </div></div>
-   <div className="finance-page__notes"><div><Check size={20}/><h3>No application submitted</h3><p>This is a browser-only calculation.</p></div><div><Info size={20}/><h3>Not an offer</h3><p>Tax, insurance, fees and lender charges may apply.</p></div><div><Calculator size={20}/><h3>Compare scenarios</h3><p>Changing your term changes the likely total interest.</p></div></div>
    <div className="finance-page__bottom"><h2>Explore your vehicle choices.</h2><p>Browse Carfolk's published listings, then confirm terms directly with the dealership.</p><a className="button button--outline" href="#/cars">Browse Cars <ArrowRight size={17}/></a></div>
   </section></Shell>;
 }
