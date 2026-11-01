@@ -1,31 +1,31 @@
 # Phase 3 — Dealership Information & Customer Conversion
 
-## Delivered frontend experiences
-1. **Dedicated About page** (#/about): client branding, grounded company introduction, platform capabilities, buyer journey, CTA.
-2. **Dedicated Contact page** (#/contact): verified contact channel cards, conditional WhatsApp/call/email links, business address/hours only when supplied.
-3. **Vehicle-specific enquiry flow** (#/contact?intent=vehicle&vehicle=slug): originating vehicle context carried into the form.
-4. **Viewing/test-drive request flow** (#/contact?intent=test-drive&vehicle=slug): vehicle, proposed Nairobi-local date/time, customer information and consent.
-5. **General enquiry form** with responsive fields, accessible messages, validation, privacy-link disclosure and an anti-bot honeypot.
-6. **Preview Privacy Notice** (#/privacy) explains the current data handling limitations; must be legally reviewed/replaced before live collection.
-7. **Connected CTAs** from landing page, catalogue vehicle cards and vehicle details to contact journeys.
-8. **Public business channels** configured only from client-verified `VITE_CARFOLK_*` variables. Without verified values, no WhatsApp, call, email or map URL is invented.
-9. **Automated unit coverage** for validation, Nairobi date, contact URL generation, and conversion routing.
+## Implemented buyer experiences
+- **About** (`#/about`): Carfolk branding and dealership-oriented introduction, without inventing staff biographies or business history.
+- **Contact** (`#/contact`): business channels appear only when supplied by the dealership API. WhatsApp, phone, email, address, and map are never invented by the frontend.
+- **Vehicle enquiry** (`#/contact?intent=vehicle&vehicle=<slug>`): preserves a published vehicle's identity and submits only the server-issued UUID.
+- **Viewing request** (`#/contact?intent=test-drive&vehicle=<slug>`): picks a date and time in East Africa Time; client validation rejects past Nairobi times, and Laravel revalidates the submitted slot.
+- **General enquiry**: explicit consent, field-level validation, phone normalization, optional email, message, and anti-spam honeypot.
+- **Privacy** (`#/privacy`): context for collection and official privacy link when present, not a replacement for an approved formal notice.
+- **Conversion CTAs**: landing, catalogue cards and vehicle detail pages route to the relevant buyer journey.
+- **Temporary notifications**: acknowledgements and user feedback animate in, stay readable briefly, then dismiss. A saved enquiry does not mean a viewing is confirmed.
 
-## Critical distinction: preview versus real submissions
-**No visitor enquiry or booking is transmitted, persisted, emailed or accepted in Phase 3.** The form explicitly asks users to enter *fictitious* data and validates on the browser only. A validated form displays “Validation successful — this is only a preview”; not “message sent” or “appointment confirmed”.
+## Current operational truth (Phases 4–5 subsequently integrated)
+The original Phase 3 delivered frontend-only validation; that description is now obsolete. The live front end calls Laravel/PostgreSQL **only when the API is connected and server-side lead acceptance is enabled**. An accepted enquiry is saved to the dealership admin inbox with status `new`. An accepted viewing request is saved with status `requested`, and staff must separately confirm it. Neither form should claim that an appointment is automatically booked. The server response determines success, not browser validation.
 
-The static GitHub Pages preview cannot securely collect personal leads. Phase 4 must provide a Laravel API and PostgreSQL persistence with authorization, validation, rate limiting, spam control and appropriate privacy handling. Phase 5 must connect the front end, produce real acknowledgement only after server success, and certify full workflows.
+In local test mode, customer submissions are restricted to explicitly enabled loopback-local PostgreSQL development. **Use invented test identities only.** GitHub Pages without an approved/configured HTTPS API stays read-only with the contact form disabled. Do not submit sensitive personal data to the static preview.
 
-## Pending from Carfolk LTD
-- Verify phone number, WhatsApp number, official email address, physical location and operating hours.
-- Provide approved About/business copy, official social media links and any genuinely substantiated dealership claims.
-- Approve a production privacy notice/retention schedule and decide who responds to enquiries.
-- Supply actual verified vehicle stock and legal media assets.
-- Decide contact inquiry categories and test-drive/viewing operating process (calendar, cancellation, confirmation).
-- Validate production notification and fallback delivery process. Avoid exposing secrets in Vite public vars.
+## Operational sequence
+1. Visitor chooses a published vehicle or starts a general enquiry.
+2. Browser validates inputs and consent; viewing time is checked in Africa/Nairobi.
+3. Backend verifies policy/lead-acceptance gate, throttle, vehicle status, dates, and field rules.
+4. On HTTP 201, the backend persists the enquiry or viewing. The browser shows a temporary acknowledgement.
+5. Authorized admins review `Customer Enquiries` and `Viewing Requests`, follow up manually and update lead statuses.
+6. A proposed viewing remains **unconfirmed** until staff changes the status and communicates with the customer.
 
-## Architectural API handoff
-The UI draft schema contains `kind`, `vehicleId`, `name`, `phone`, optional `email`, `message`, `preferredDate`, `preferredTime`, and explicit `consent`. The API should accept only whitelisted fields and bind `vehicleId` to actual published vehicles. It must not trust synthetic demo IDs in production. Store submission and consent timestamp server-side, send necessary acknowledgement only when accepted, and expose enquiries only to authorized dealership admins.
+## Outstanding before real public launch
+Client-verified business contacts and location; approved privacy notice and retention policy; deployed production backend, persistent PostgreSQL and media storage; SMTP/notification delivery if desired; server monitoring, backup and recovery; real vehicle inventory, operations handover and public conversion certification.
 
-## Quality gate
-`npm run typecheck && npm run test && npm run build`; code must pass GitHub Actions. Preview must maintain non-indexing and clear sample disclosures until real content and privacy controls are ready. **Browser-level visual QA remains a separate release validation step.**
+## Validation
+`cd apps/web && npm ci && npm run typecheck && npm run test && npm run build`.
+Cross-system CI runs Playwright + isolated PostgreSQL buyer-to-admin flows, and Laravel has feature tests for lead gates and persistence. This does **not** certify production infrastructure or actual email/WhatsApp delivery.

@@ -1,5 +1,6 @@
-import {useEffect,useRef,useState,type ChangeEvent,type FormEvent} from 'react';
-import {ArrowRight,CheckCircle2,Info,MessageCircle,Send} from 'lucide-react';
+import {useEffect,useState,type ChangeEvent,type FormEvent} from 'react';
+import {ArrowRight,Info,MessageCircle,Send} from 'lucide-react';
+import {NoticeToast} from './NoticeToast';
 import {getVehicle,submitEnquiry,ApiError,type Vehicle} from '../api/client';
 import {useRemote,useSite} from '../api/hooks';
 import {EMPTY_DRAFT,countErrors,todayInNairobi,validateEnquiry,type EnquiryDraft,type EnquiryKind,type FormErrors} from '../lib/enquiries';
@@ -25,7 +26,6 @@ export function EnquiryForm({intent,vehicleSlug}:Props){
  const [sending,setSending]=useState(false);
  const [success,setSuccess]=useState<{id:string;status:string}|null>(null);
  const [feedback,setFeedback]=useState('');
- const alertRef=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   setDraft(d=>({...d,kind:intent,vehicleId:vehicle?.id??''}));
   setErrors({});setSuccess(null);setFeedback('');
@@ -46,7 +46,11 @@ export function EnquiryForm({intent,vehicleSlug}:Props){
   e.preventDefault();if(sending||!canSubmit)return;
   const next=validateEnquiry({...draft,vehicleId:vehicle?.id??''});
   setErrors(next);
-  if(countErrors(next)){setFeedback('Correct the highlighted fields and try again.');alertRef.current?.focus();return;}
+  if(countErrors(next)){
+   setFeedback('Correct the highlighted fields and try again.');
+   requestAnimationFrame(()=>document.querySelector<HTMLElement>('.enquiry-form [aria-invalid="true"]')?.focus());
+   return;
+  }
   setSending(true);setFeedback('');setSuccess(null);
   const payload={
    ...(intent==='general'?{}:{vehicle_id:vehicle!.id}),
@@ -63,18 +67,20 @@ export function EnquiryForm({intent,vehicleSlug}:Props){
   }catch(e){
    if(e instanceof ApiError){setErrors(serverErrors(e));setFeedback(e.status===0?'Submission could not be confirmed. Before retrying, contact Carfolk to avoid duplicate requests.':e.message)}
    else setFeedback('Your request could not be confirmed. Please contact the dealership before retrying.');
-  }finally{setSending(false);requestAnimationFrame(()=>alertRef.current?.focus())}
+  }finally{setSending(false)}
  }
  const invalid=(field:keyof EnquiryDraft)=>errors[field]?true:undefined;
  return <div className="enquiry-form-card" id="enquiry-form">
   <div className="enquiry-form-card__heading"><div><span className="eyebrow eyebrow--red">CUSTOMER ENQUIRIES</span><h2>How can we help?</h2></div><div className="enquiry-form-card__icon"><MessageCircle size={28}/></div></div>
-  <div className="enquiry-modes" role="group" aria-label="Enquiry type">{modes.map(mode=><button type="button" key={mode.value} className={intent===mode.value?'is-selected':''} onClick={()=>choose(mode.value)} aria-pressed={intent===mode.value}><span>{mode.title}</span><small>{mode.detail}</small></button>)}</div>
+  <div className="enquiry-modes" role="group" aria-label="Enquiry type">{modes.map(mode=><button type="button" key={mode.value} className={intent===mode.value?'is-selected':''} onClick={()=>choose(mode.value)} disabled={sending} aria-pressed={intent===mode.value}><span>{mode.title}</span><small>{mode.detail}</small></button>)}</div>
   {!live&&<div className="enquiry-form-card__warning" role="status"><Info size={19}/><div><strong>Enquiries are currently unavailable.</strong></div></div>}
   {intent!=='general'&&!vehicleLoading&&!vehicle&&<div className="enquiry-form-card__warning"><Info size={19}/><div><strong>{vehicleError?'Vehicle unavailable.':'Select a vehicle.'}</strong><p><a href="#/cars">Browse cars →</a></p></div></div>}
+  {errors.vehicleId&&<span className="enquiry-error" role="alert">{errors.vehicleId}</span>}
   {intent==='test-drive'&&vehicle&&vehicle.status!=='available'&&<div className="enquiry-form-card__warning"><Info size={19}/><div><strong>Viewing unavailable for this vehicle.</strong></div></div>}
   {vehicle&&<div className="finance-linked"><Info size={18}/><div><strong>{vehicle.make} {vehicle.model} · {vehicle.year}</strong><small>{vehicle.status}</small></div></div>}
   <form className="enquiry-form" onSubmit={submit} noValidate>
    <fieldset disabled={!canSubmit||sending} className="enquiry-fieldset">
+   <div className="enquiry-field enquiry-field--honeypot" aria-hidden="true"><label htmlFor="enquiry-website">Website</label><input id="enquiry-website" type="text" tabIndex={-1} autoComplete="off" value={draft.website} onChange={input('website')}/></div>
    <div className="enquiry-form__grid">
     <div className="enquiry-field"><label htmlFor="enquiry-name">Full name <em>*</em></label><input id="enquiry-name" type="text" autoComplete="name" value={draft.name} onChange={input('name')} maxLength={80} required aria-invalid={invalid('name')}/>{errors.name&&<span className="enquiry-error" role="alert">{errors.name}</span>}</div>
     <div className="enquiry-field"><label htmlFor="enquiry-phone">Phone number <em>*</em></label><input id="enquiry-phone" type="tel" autoComplete="tel" value={draft.phone} onChange={input('phone')} placeholder="07XX XXX XXX" required aria-invalid={invalid('phone')}/>{errors.phone&&<span className="enquiry-error" role="alert">{errors.phone}</span>}</div>
@@ -86,9 +92,7 @@ export function EnquiryForm({intent,vehicleSlug}:Props){
    <button className="button button--primary enquiry-submit" type="submit" disabled={!canSubmit||sending}><Send size={17}/>{sending?'Sending request…':intent==='test-drive'?'Request viewing':'Send enquiry'} <ArrowRight size={17}/></button>
    </fieldset>
   </form>
-  <div className={'enquiry-feedback'+(success?' enquiry-feedback--ok':'')} tabIndex={-1} ref={alertRef} aria-live="polite" aria-atomic="true">
-   {success?<><CheckCircle2 size={23}/><div><strong>{intent==='test-drive'?'Viewing request received — awaiting confirmation.':'Enquiry received by Carfolk.'}</strong></div></>:
-    feedback?<><Info size={20}/><div><strong>Could not complete the request</strong><p>{feedback}</p></div></>:null}
-  </div>
+  {success&&<NoticeToast key={'received-'+success.id} tone="success" message={intent==='test-drive'?'Viewing request received — awaiting confirmation.':'Enquiry received by Carfolk.'} onDismiss={()=>setSuccess(null)}/>}
+  {!success&&feedback&&<NoticeToast key={'feedback-'+feedback} tone="error" message={feedback} onDismiss={()=>setFeedback('')}/>}
  </div>;
 }

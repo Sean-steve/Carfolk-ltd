@@ -1,6 +1,7 @@
 import {useState,type FormEvent} from 'react';
 import {ArrowRight,ArrowUpRight,CalendarCheck,CarFront,GitCompareArrows,Headphones,Info,MessageCircle,Search,ShieldCheck,SlidersHorizontal} from 'lucide-react';
 import {Shell} from '../components/Shell';
+import {NoticeToast} from '../components/NoticeToast';
 import {ListingCard} from '../components/ListingCard';
 import {useOptions,useVehicles} from '../api/hooks';
 function Heading({eyebrow,title,description}:{eyebrow:string;title:string;description:string}){
@@ -58,6 +59,6 @@ export default function HomePage(){
   <section className="finance-box"><div className="finance-box__visual"><div className="finance-box__dark"><span className="eyebrow">KNOW YOUR NUMBERS</span><h2>Plan your next<br/>move confidently.</h2><p>Explore an illustrative monthly repayment estimate. This is not an offer or a loan approval.</p><a className="button button--primary" href="#/finance">Estimate monthly payments <ArrowRight size={16}/></a></div></div><div className="finance-box__details"><h3>Vehicle finance planning</h3><p>Change the deposit, interest assumption, and repayment term. Check your eligibility and lender terms independently.</p><ul><li>Deposit scenarios</li><li>Transparent repayment illustration</li><li>No credit application required</li></ul></div></section>
   <section className="section about" id="about"><div className="container about__grid"><div className="about__image"><img src="https://images.unsplash.com/photo-1486496572940-2bb2341fdbdf?auto=format&fit=crop&w=1100&q=85" alt="Decorative automotive photograph"/></div><div className="about__copy"><span className="eyebrow eyebrow--red">ABOUT CARFOLK LTD</span><h2>Your next car, with clearer choices.</h2><p className="about__lead">Quality &amp; Affordability.</p><p>Carfolk's digital showroom helps customers discover vehicles, review specifications, compare options and make enquiries directly with the dealership.</p><a className="button button--outline" href="#/about">Discover more <ArrowUpRight size={17}/></a></div></div></section>
   <section className="contact"><div className="container contact__grid"><div><span className="eyebrow">GET IN TOUCH</span><h2>Ready to find <em>your next drive?</em></h2><p>Reach Carfolk to discuss availability, ask questions, or request a viewing.</p><div className="contact__actions"><a className="button button--primary" href="#/contact"><MessageCircle size={18}/> Contact Carfolk</a><a className="button button--line-light" href="#/contact?intent=test-drive"><CalendarCheck size={18}/> Request a viewing</a></div></div><div className="contact__card"><span className="contact__card-overline">CARFOLK LTD</span><h3>Quality &amp; Affordability</h3></div></div></section>
-  {notice&&<div className="toast" role="status"><Info size={18}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Dismiss"><ArrowRight size={16}/></button></div>}
+  {notice&&<NoticeToast message={notice} onDismiss={()=>setNotice('')}/>} 
  </Shell>;
 }
