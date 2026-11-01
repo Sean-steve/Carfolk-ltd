@@ -1,4 +1,4 @@
-import {ArrowRight,ArrowUpRight,ChevronRight,Clock3,Mail,MapPin,MessageCircle,Phone} from 'lucide-react';
+import {ArrowUpRight,ChevronRight,Clock3,Mail,MapPin,MessageCircle,Phone} from 'lucide-react';
 import {Shell} from '../components/Shell';
 import {EnquiryForm} from '../components/EnquiryForm';
 import {emailLink,intentMessage,mapLink,phoneLink,whatsappLink} from '../config/dealership';
