@@ -66,6 +66,16 @@ Visit **http://127.0.0.1:8000/manage/login** for the admin dashboard, or **http:
 **Setup details, environment values and troubleshooting:** [Full backend setup guide](apps/api/README.md#local-development--ubuntulinux-works-with-the-react-frontend).
 
 
+### Populate five cars for the local admin
+
+After successful database migrations, run from `apps/api`:
+
+```bash
+php artisan carfolk:local-inventory
+```
+
+Log in at **http://127.0.0.1:8000/manage/login** and open **Vehicle Inventory**. Five editable draft vehicles are inserted once, with ordinary vehicle names and prices. Publish them from the admin if you want to see them on the local frontend. Use `php artisan carfolk:local-inventory --publish` on the *first run* to publish immediately (local database only). Existing staff edits are never overwritten; no photos are supplied. **Full instructions:** [Local inventory command](apps/api/README.md#add-five-vehicles-to-your-local-admin).
+
 ### Phase 5 cross-system integration
 
 The React frontend connects to Laravel using same-origin `/api/v1` and `/storage` paths (proxied by Vite locally). On real hosting, an HTTPS reverse proxy must route these paths to Laravel. `CARFOLK_LEADS_ENABLED` is disabled by default, and a valid Carfolk-approved `CARFOLK_PRIVACY_URL` is required to collect enquiries. See [Phase 5 integration](docs/PHASE_5_INTEGRATION.md) for evidence, browser tests and rollout limits.

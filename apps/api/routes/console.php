@@ -50,3 +50,26 @@ Artisan::command('carfolk:privacy-prune {--execute}', function() {
     $this->info("Executed approved retention cleanup: {$a} closed enquiries and {$b} finalized viewings.");
     return 0;
 })->purpose('Dry-run or explicitly execute client-approved lead retention (closed cases only).');
+
+/**
+ * Add five ordinary-looking vehicles for exercising local dealership operations.
+ * Existing admin edits are preserved when this command is repeated.
+ */
+Artisan::command('carfolk:local-inventory {--publish : Publish newly created local vehicles to the local website}', function () {
+    if (!\Database\Seeders\LocalInventorySeeder::isAllowed()) {
+        $this->error('Refused: this command only runs for local/testing PostgreSQL on localhost with database carfolk (or carfolk_test).');
+        return 1;
+    }
+
+    $result = app(\Database\Seeders\LocalInventorySeeder::class)
+        ->run((bool) $this->option('publish'));
+
+    $this->info("Carfolk inventory ready: {$result['created']} created, {$result['existing']} already present.");
+    $this->line('Existing records were not changed. Open http://127.0.0.1:8000/manage/vehicles');
+
+    if (!$this->option('publish')) {
+        $this->comment('New entries are drafts. Publish them from the admin to display them on the local website.');
+    }
+
+    return 0;
+})->purpose('Create five illustrative vehicles for the local Carfolk administrator.');
