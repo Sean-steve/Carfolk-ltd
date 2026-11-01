@@ -16,7 +16,7 @@ export type Vehicle = {
 export type Site = {
  name:string;tagline:string;phone:string|null;whatsapp:string|null;email:string|null;
  address:string|null;opening_hours:string|null;about:string|null;
- leads_enabled:boolean;privacy_url:string|null;
+ leads_enabled:boolean;privacy_url:string|null;test_mode?:boolean;
 };
 export type CatalogueOptions = {
  makes:string[];models_by_make:Record<string,string[]>;bodies:string[];

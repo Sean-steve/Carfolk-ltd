@@ -31,7 +31,7 @@
   <div class="form-actions"><button type="submit" class="btn btn-primary">{{ $mode==='create'?'Create vehicle':'Save changes' }} →</button><a href="{{ route('manage.vehicles.index') }}" class="btn btn-outline">Cancel</a></div>
  </form>
  @if($mode==='edit')
- <section class="panel image-panel"><div class="panel-head"><h2>Vehicle photos</h2><p>JPEG, PNG or WebP up to 8 MB. Maximum 20 images per vehicle. Use real photos of the correct vehicle.</p></div>
+ <section class="panel image-panel"><div class="panel-head"><h2>Vehicle photos</h2><p>Select up to 5 JPEG, PNG or WebP photos per upload (8 MB each). Maximum 20 total per vehicle. Upload again to add more.</p><p>{{ $vehicle->images->count() }} / 20 photos added.</p></div>
   <div class="vehicle-images">
    @forelse($vehicle->images as $image)
    <div class="vehicle-image"><img src="{{ \Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" alt="{{ $image->alt_text??'Vehicle photograph' }}"><div class="vehicle-image__meta">@if($image->is_primary)<span class="pill pill-available">Primary</span>@endif<form method="post" action="{{ route('manage.vehicles.photos.remove',[$vehicle,$image]) }}">@csrf @method('DELETE')<button type="submit">Remove</button></form></div></div>
@@ -39,9 +39,9 @@
    @endforelse
   </div>
   <form class="photo-upload" method="post" enctype="multipart/form-data" action="{{ route('manage.vehicles.photos.add',$vehicle) }}">@csrf
-   <label>Choose vehicle photo<input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required></label>
+   <label>Choose photos (1–5 per upload)<input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required></label>
    <label>Alternative text<input name="alt_text" maxlength="200" placeholder="e.g. Front view of vehicle"></label>
-   <button type="submit" class="btn btn-primary">Upload photo</button>
+   <button type="submit" class="btn btn-primary">Upload selected photos</button><p class="small-label">If uploading several large files fails, check PHP upload_max_filesize and post_max_size. Total request must fit your server limits.</p>
   </form>
  </section>
  @endif

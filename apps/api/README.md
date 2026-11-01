@@ -159,6 +159,41 @@ If you share PostgreSQL with Deetoo, keep Carfolk's Docker service mapped to its
 
 **Important:** GitHub cannot write to your laptop database. First `git pull origin main`, then run the command locally. This is deliberately not part of `DatabaseSeeder` and cannot run during a production deployment.
 
+## Local vehicle galleries and enquiry testing
+
+### Upload more than one image to a car
+
+1. Sign in at `http://127.0.0.1:8000/manage/login`.
+2. Open **Vehicle Inventory → Edit vehicle → Vehicle photos**.
+3. Click **Choose photos**, hold Ctrl to select several files (or drag-select in the file picker), then click **Upload selected photos**.
+4. Upload 1–5 JPEG/PNG/WebP photos at a time, up to 20 images per vehicle. You can upload additional batches. The first uploaded photo remains the primary image. Remove any image in the same panel.
+
+Each file is limited to **8 MB**; a five-file batch can exceed the usual PHP default request limit. Run `php --ini` and check your CLI `php.ini` (for example `/etc/php/8.5/cli/php.ini`). Set `upload_max_filesize = 8M`, `post_max_size = 48M`, and `max_file_uploads = 20` (or higher). Restart `php artisan serve`. The example production Nginx configuration also accepts requests up to 48 MB. No photo change requires a migration.
+
+### Enable enquiry and viewing forms on YOUR local machine
+
+Live customer submissions default to disabled until Carfolk approves a privacy notice. To test the full workflow **with invented information only**, add this line to your untracked `apps/api/.env`:
+
+```dotenv
+CARFOLK_LOCAL_ENQUIRIES_ENABLED=true
+```
+
+Keep `APP_ENV=local`, `CARFOLK_LEADS_ENABLED=false`, and `DB_CONNECTION=pgsql`; `DB_DATABASE=carfolk` and `DB_HOST=127.0.0.1` (or `localhost`) must refer to the isolated Carfolk database. Your own host port is configured with `DB_PORT` (e.g. `5434`); **do not point to Deetoo**. Then:
+
+```bash
+cd ~/Sites/Carfolk-ltd/apps/api
+php artisan config:clear
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+Restart the existing React frontend if necessary and open `http://localhost:5173/#/contact`. The form will show **Local enquiry testing is enabled**, along with a dedicated local test-data notice. Use invented values, such as name `Local Tester`, phone `0712345678`, and a fictional message. Submit a general enquiry or choose a published vehicle to request a viewing.
+
+The successful request is written to your local PostgreSQL database. Inspect it at `http://127.0.0.1:8000/manage/enquiries` or `http://127.0.0.1:8000/manage/viewings`. The website never pretends a request succeeded without a real database insert, and viewings remain requests until confirmed by an admin.
+
+**Safety:** This is a developer-only test mode, not a substitute for Carfolk's approved privacy policy. It works only with `APP_ENV=local`, the Carfolk local PostgreSQL database and requests from the same computer; the React dev server listens on loopback by default. The public GitHub Pages preview, staging and production environments remain blocked. Disable `CARFOLK_LOCAL_ENQUIRIES_ENABLED` and delete invented test records when finished. Never enter real customer personal information here.
+
+If the fields still appear disabled, verify `http://localhost:5173/api/v1/site` returns `"leads_enabled":true` and `"test_mode":true`. Confirm the PHP server is running on port 8000, your `.env` is the one in `apps/api`, and clear/restart Laravel. No restart of PostgreSQL is necessary.
+
 ## API
 - `GET /api/v1/vehicles`, `GET /api/v1/vehicles/{slug}`, `GET /api/v1/site`.
 - `POST /api/v1/enquiries`, `POST /api/v1/test-drives` (rate-limited).

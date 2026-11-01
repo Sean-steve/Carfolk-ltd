@@ -35,9 +35,18 @@ class VehicleAdminController extends Controller {
  }
  public function upload(Request $request,Vehicle $vehicle) {
     abort_if($vehicle->archived_at,404);
-    $data=$request->validate(['photo'=>['required',File::types(['jpg','jpeg','png','webp'])->max('8mb')],'alt_text'=>['nullable','string','max:200']]);
-    PhotoManager::add($vehicle,$data['photo'],$data['alt_text']??null);
-    return back()->with('success','Vehicle photo added.');
+    $multi=$request->hasFile('photos');
+    $data=$request->validate($multi ? [
+      'photos'=>['required','array','min:1','max:5'],
+      'photos.*'=>['required',File::types(['jpg','jpeg','png','webp'])->max('8mb')],
+      'alt_text'=>['nullable','string','max:200'],
+    ] : [
+      'photo'=>['required',File::types(['jpg','jpeg','png','webp'])->max('8mb')],
+      'alt_text'=>['nullable','string','max:200'],
+    ]);
+    $photos=$multi?$data['photos']:[$data['photo']];
+    $added=PhotoManager::addMany($vehicle,$photos,$data['alt_text']??null);
+    return back()->with('success',count($added).' vehicle '.(count($added)===1?'photo':'photos').' uploaded.');
  }
  public function removePhoto(Vehicle $vehicle,VehicleImage $image) {
     PhotoManager::remove($vehicle,$image);
