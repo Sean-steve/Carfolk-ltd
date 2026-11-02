@@ -1,0 +1,114 @@
+name: Carfolk - cPanel Release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: carfolk-cpanel-release
+  cancel-in-progress: false
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: apps/web
+      - run: npm run typecheck && npm run test && npm run build
+        working-directory: apps/web
+      - name: Check release is non-indexable until owner approval
+        run: grep -q 'content="noindex,nofollow"' apps/web/dist/index.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: carfolk-web-release
+          path: apps/web/dist/
+          if-no-files-found: error
+          include-hidden-files: true
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: carfolk
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: carfolk_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U carfolk -d carfolk_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_pgsql, pgsql, gd, fileinfo, exif, dom, xml, curl, bcmath
+          coverage: none
+          tools: composer:v2
+      - run: composer validate --no-check-publish
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - name: Initialize isolated test database
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          php artisan package:discover --ansi
+          php artisan migrate --force --no-interaction
+          php artisan test --compact
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: '5432'
+          DB_DATABASE: carfolk_test
+          DB_USERNAME: carfolk
+          DB_PASSWORD: test-only-password
+          SESSION_DRIVER: array
+          CACHE_STORE: array
+  publish:
+    needs: [web, api]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: carfolk-web-release
+          path: release/web
+      - name: Prepare safe release payload
+        run: |
+          set -euo pipefail
+          mkdir -p release/api
+          cp -a apps/api/. release/api/
+          # The published branch must never contain runtime credentials or data.
+          rm -rf release/api/.env release/api/vendor release/api/node_modules
+          rm -rf release/api/storage/app/private release/api/storage/app/public
+          test -s release/api/composer.lock
+          test -s release/web/index.html
+          test -d release/web/assets
+          printf '%s\n' "$GITHUB_SHA" > release/SOURCE_COMMIT
+          if find release -type f \( -name '.env' -o -name '*.pem' -o -name '*.key' \) -print | grep -q .; then
+            echo 'Release payload contains a possible secret file' >&2
+            exit 1
+          fi
+      - name: Publish release branch (no hosting credentials needed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd release
+          git init -b cpanel-release
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all
+          git commit -m "Carfolk cPanel release ${GITHUB_SHA}"
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c http.extraheader="AUTHORIZATION: basic $auth" push --force origin HEAD:refs/heads/cpanel-release
