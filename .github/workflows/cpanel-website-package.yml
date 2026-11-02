@@ -1,0 +1,92 @@
+name: Carfolk — Package Built Website for cPanel
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/cpanel-website-package.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: carfolk-cpanel-built-website
+  cancel-in-progress: false
+jobs:
+  package:
+    name: Build and publish cPanel-ready frontend branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Test and compile React storefront
+        working-directory: apps/web
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npm run test
+          npm run build
+          test -s dist/index.html
+          test -s dist/robots.txt
+          grep -q 'content="noindex,nofollow"' dist/index.html
+          grep -q 'Disallow: /' dist/robots.txt
+      - name: Stage compiled files outside the source checkout
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/cpanel-dist"
+          cp -a apps/web/dist/. "$RUNNER_TEMP/cpanel-dist/"
+          if find "$RUNNER_TEMP/cpanel-dist" -type f \( -name ".env" -o -name ".env.*" -o -name "*.php" \) | grep -q .; then
+            echo "Unexpected source or secret file in frontend build"; exit 1;
+          fi
+      - name: Publish clean fast-forward cPanel branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "carfolk-site-publisher"
+          git config user.email "carfolk-site-publisher@users.noreply.github.com"
+          dir="$RUNNER_TEMP/cpanel-branch"
+          if git ls-remote --exit-code --heads origin cpanel-frontend >/dev/null; then
+            git fetch origin cpanel-frontend:refs/remotes/origin/cpanel-frontend
+            git worktree add --detach "$dir" refs/remotes/origin/cpanel-frontend
+          else
+            git worktree add --detach "$dir" HEAD
+            (
+              cd "$dir"
+              git switch --orphan cpanel-frontend
+              git rm -r -f --ignore-unmatch .
+            )
+          fi
+          cd "$dir"
+          rm -rf website
+          mkdir website
+          cp -a "$RUNNER_TEMP/cpanel-dist/." website/
+          cat > .cpanel.yml <<'CPANEL'
+          ---
+          deployment:
+            tasks:
+              - /bin/mkdir -p $HOME/public_html
+              - /bin/cp -R website/. $HOME/public_html/
+          CPANEL
+          cat > README.txt <<'README'
+          Carfolk LTD: cPanel frontend deployment branch.
+          Contains compiled React website and .cpanel.yml at repository root.
+          In cPanel: check out cpanel-frontend, Update from Remote, Deploy HEAD Commit.
+          Back up existing files in public_html before deployment.
+          Live inventory, enquiries, admin and API still need Laravel/PostgreSQL hosting.
+          This website is noindex while full production release is unapproved.
+          Do not manually edit the cPanel Git checkout.
+          README
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No compiled website changes; no new commit needed."
+          else
+            git commit -m "Build cPanel storefront from ${GITHUB_SHA}"
+            git push origin HEAD:refs/heads/cpanel-frontend
+          fi
