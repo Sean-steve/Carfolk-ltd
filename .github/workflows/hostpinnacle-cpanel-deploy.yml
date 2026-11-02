@@ -1,0 +1,143 @@
+name: HostPinnacle cPanel — Protected Carfolk Deployment
+on:
+  workflow_run:
+    workflows: ["Carfolk Phase 5 — Browser and PostgreSQL Integration"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: carfolk-hostpinnacle-production
+  cancel-in-progress: false
+
+jobs:
+  certify:
+    name: Require deployment flag and green main checks
+    if: >-
+      ${{
+        vars.CARFOLK_DEPLOY_ENABLED == 'enabled' &&
+        (
+          github.event_name == 'workflow_dispatch' ||
+          (
+            github.event_name == 'workflow_run' &&
+            github.event.workflow_run.event == 'push' &&
+            github.event.workflow_run.head_branch == 'main' &&
+            github.event.workflow_run.conclusion == 'success'
+          )
+        )
+      }}
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.check.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - id: check
+        name: Require current main and successful frontend, backend and browser CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INCOMING_SHA: ${{ github.event.workflow_run.head_sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          [[ "$EVENT_NAME" == "workflow_dispatch" || "$INCOMING_SHA" == "$sha" ]] || {
+            echo "Obsolete main commit: deployment intentionally ignored"; exit 1;
+          }
+          for attempt in $(seq 1 30); do
+            runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&head_sha=$sha&per_page=100")"
+            result=0
+            for name in "Frontend CI" "Carfolk Backend — PostgreSQL Certification" "Carfolk Phase 5 — Browser and PostgreSQL Integration"; do
+              conclusion="$(jq -r --arg sha "$sha" --arg name "$name" \
+                '[.workflow_runs[] | select(.head_sha == $sha and .name == $name and .event == "push")] | sort_by(.created_at) | last | .conclusion // ""' <<< "$runs")"
+              if [[ "$conclusion" != "success" ]]; then result=1; fi
+            done
+            if [[ "$result" -eq 0 ]]; then
+              echo "sha=$sha" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "All required tests must pass for the active main SHA"; exit 1
+
+  deploy:
+    name: Deploy private Laravel and React release to HostPinnacle
+    needs: certify
+    if: ${{ needs.certify.result == 'success' }}
+    environment: carfolk-production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SHA: ${{ needs.certify.outputs.sha }}
+      SSH_HOST: ${{ secrets.CARFOLK_SSH_HOST }}
+      SSH_USER: ${{ secrets.CARFOLK_SSH_USER }}
+      SSH_PORT: ${{ secrets.CARFOLK_SSH_PORT }}
+      SSH_KEY: ${{ secrets.CARFOLK_SSH_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.CARFOLK_SSH_KNOWN_HOSTS }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.certify.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate cPanel scripts and public PHP front controller
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n infra/cpanel/preflight.sh infra/cpanel/deploy-release.sh
+          php -l infra/cpanel/front-controller.php
+      - name: Build noindex production React frontend
+        shell: bash
+        working-directory: apps/web
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run build
+          grep -q 'content="noindex,nofollow"' dist/index.html
+          grep -q 'Disallow: /' dist/robots.txt
+      - name: Package only required application and public build files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/carfolk"
+          tar -czf "$RUNNER_TEMP/carfolk/$SHA.tar.gz" \
+            --exclude='node_modules' \
+            --exclude='vendor' \
+            --exclude='.env' \
+            --exclude='*.sqlite' \
+            --exclude='storage/logs/*' \
+            --exclude='storage/app/public/*' \
+            apps/api apps/web/dist infra/cpanel
+          tar -tzf "$RUNNER_TEMP/carfolk/$SHA.tar.gz" | grep -q '^infra/cpanel/deploy-release.sh$'
+      - name: Set up pin-verified, key-only SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "$SSH_HOST" && -n "$SSH_USER" && "$SSH_PORT" =~ ^[0-9]{1,5}$ && -n "$SSH_KEY" && -n "$SSH_KNOWN_HOSTS" ]] || {
+            echo 'Production SSH secrets are not yet configured'; exit 1;
+          }
+          [[ "$SSH_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ && "$SSH_HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || exit 1
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/carfolk_deploy"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/carfolk_deploy" "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/carfolk_deploy" >/dev/null
+      - name: Upload and activate guarded release
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -i "$HOME/.ssh/carfolk_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            'umask 077; mkdir -p "$HOME/carfolk/incoming"'
+          scp -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -i "$HOME/.ssh/carfolk_deploy" -P "$SSH_PORT" \
+            "$RUNNER_TEMP/carfolk/$SHA.tar.gz" "$SSH_USER@$SSH_HOST:carfolk/incoming/$SHA.tar.gz"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -i "$HOME/.ssh/carfolk_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "bash -s -- $SHA" < infra/cpanel/deploy-release.sh
