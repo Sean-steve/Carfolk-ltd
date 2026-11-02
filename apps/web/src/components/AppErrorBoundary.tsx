@@ -20,7 +20,7 @@ export class AppErrorBoundary extends Component<Props,State>{
     <p>Something unexpected happened. You can reload the site or return to the showroom.</p>
     <div className="app-error-fallback__actions">
      <button type="button" onClick={()=>window.location.reload()}>Try again</button>
-     <a href="/" >Return to Carfolk</a>
+     <a href={import.meta.env.BASE_URL}>Return to Carfolk</a>
     </div>
    </div>
   </main>;
