@@ -1,0 +1,33 @@
+# Carfolk cPanel Apache document root: static React + private Laravel bootstrap.
+# NEVER point document root at the Laravel project folder.
+Options -Indexes -MultiViews
+DirectoryIndex index.html index.php
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+# Always use HTTPS; TLS must be provisioned before initial activation.
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L,NE]
+# Preserve authorization headers for Laravel.
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteCond %{HTTP:X-XSRF-TOKEN} .
+RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-TOKEN}]
+# Laravel routes operate on their original REQUEST_URI.
+RewriteRule ^(api(?:/.*)?|manage(?:/.*)?|listing/.*|robots\.txt|sitemap\.xml|up|local/privacy)$ index.php [END,QSA]
+# React is a hash-based SPA, so a safe fallback renders its static entry page.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [END]
+</IfModule>
+
+<FilesMatch "(^\.|\.(?:env|ini|log|sql|bak|phar|sh|yml|yaml|json|lock)$)">
+Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "DENY"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+# Release gate: indexing stays OFF until a separate written client approval.
+Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>
