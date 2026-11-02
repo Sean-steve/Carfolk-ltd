@@ -131,8 +131,11 @@ Artisan::command('carfolk:launch-audit', function () {
                 ->every(fn($field) => is_string($site->{$field}) && trim($site->{$field}) !== '');
         $inventory = \App\Models\Vehicle::published()->where('status', 'available');
         $checks['Available published inventory exists'] = (clone $inventory)->exists();
-        $checks['Every available published car has a photo record'] = (clone $inventory)->exists()
-            && !(clone $inventory)->whereDoesntHave('images')->exists();
+        $checks['Every available published car has an accessible stored photo'] = (clone $inventory)->exists()
+            && (clone $inventory)->with('images')->get()->every(function ($car) {
+                return $car->images->isNotEmpty()
+                    && $car->images->contains(fn($image) => \Illuminate\Support\Facades\Storage::disk($image->disk)->exists($image->path));
+            });
         $checks['Local sample stock is not published'] = !\App\Models\Vehicle::published()
             ->whereIn('stock_reference', ['CF-1001','CF-1002','CF-1003','CF-1004','CF-1005'])->exists();
         $checks['Active authorized administrator exists'] = \App\Models\User::query()
