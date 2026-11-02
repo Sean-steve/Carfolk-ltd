@@ -47,10 +47,11 @@
    @empty <p class="empty">No photos yet. Add a front, rear and interior view when available and approved for use.</p>
    @endforelse
   </div>
-  <form class="photo-upload" method="post" enctype="multipart/form-data" action="{{ route('manage.vehicles.photos.add',$vehicle) }}">@csrf
+  <form class="photo-upload" method="post" enctype="multipart/form-data" action="{{ route('manage.vehicles.photos.add',$vehicle) }}" data-photo-upload data-existing-photos="{{ $vehicle->images->count() }}" data-server-file-limit="{{ ini_get('upload_max_filesize') }}" data-server-post-limit="{{ ini_get('post_max_size') }}">@csrf
    <label>Choose photos (up to 5 JPEG, PNG or WebP; 8 MB each)<input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required></label>
    <label>Alternative text<input name="alt_text" maxlength="200" placeholder="e.g. Front view of vehicle"></label>
    <button type="submit" class="btn btn-primary">Upload selected photos</button>
+   <p class="flash flash-error photo-upload-error" data-upload-error tabindex="-1" role="alert" hidden></p>
   </form>
   <p class="experience-footnote">Accepted: JPEG, PNG or WebP; up to 5 files per upload, 8 MB each, and 20 photos per vehicle. Only upload images Carfolk is allowed to publish.</p>
  </section>
