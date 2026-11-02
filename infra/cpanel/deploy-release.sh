@@ -15,7 +15,6 @@ release="$root/releases/$sha"
 [[ -d "$docroot" ]] || die "Document root is missing"
 mkdir -p "$root/releases" "$shared/backups"
 # Validate account, PHP, private env, DB backup prerequisites and initial-install permissions.
-phpbin="$(bash -c 'source /dev/stdin >/dev/null' </dev/null 2>/dev/null || true)"
 # The preflight file is shipped in the package; unpack to a new private release directory first.
 mkdir "$release"
 tar -xzf "$package" -C "$release" || die "Corrupt release archive"
