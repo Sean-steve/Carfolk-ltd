@@ -43,6 +43,22 @@ describe('Carfolk real backend client',()=>{
   fetchMock.mockRejectedValueOnce(new Error('Network'));
   await expect(getSite()).rejects.toBeInstanceOf(ApiError);
  });
+ it('recognizes HTML 413 responses from the web server and keeps a support reference',async()=>{
+  const fetchMock=vi.mocked(fetch);
+  fetchMock.mockResolvedValueOnce({
+   ok:false,status:413,headers:new Headers({'X-Request-ID':'o6-test-reference'}),
+   json:async()=>{throw new SyntaxError('Unexpected HTML response')},
+  } as Response);
+  await expect(getSite()).rejects.toMatchObject({status:413,requestId:'o6-test-reference',message:'Your request is too large. Try a smaller upload or fewer photos.'});
+ });
+ it('does not expose server internals in API errors',async()=>{
+  const fetchMock=vi.mocked(fetch);
+  fetchMock.mockResolvedValueOnce({
+   ok:false,status:500,headers:new Headers({'X-Request-ID':'o6-server-123'}),
+   json:async()=>({message:'Secret stack trace',error:{code:'SERVER_ERROR',request_id:'o6-server-123'}}),
+  } as Response);
+  await expect(getSite()).rejects.toMatchObject({status:500,requestId:'o6-server-123',message:'The dealership server could not complete your request. Reference: o6-server-123'});
+ });
  it('retrieves site configuration and live filter options',async()=>{
   const fetchMock=vi.mocked(fetch);
   fetchMock.mockResolvedValueOnce(fake({data:{leads_enabled:false,privacy_url:null,name:'Carfolk LTD'}}));
