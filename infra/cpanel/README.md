@@ -1,3 +1,47 @@
+# Phase O5 — Automatic release for the EXISTING live cPanel installation
+
+**Recommended for the currently working carfolkltd.com:** use the cPanel pull-and-Cron integration added in .github/workflows/cpanel-release.yml and infra/cpanel/deploy.sh. It targets the actual existing paths /home2/carfolkl/carfolk-api and /home2/carfolkl/public_html, and needs no external SSH access or Node.js on cPanel.
+
+**Activation status: not yet enabled on HostPinnacle.** Source automation is committed, but deployment will not occur until you run the private server setup below and deliberately opt in. First verify a restorable, securely stored PostgreSQL and vehicle-image backup.
+
+GitHub workflow: every main push runs React tests/build and PostgreSQL-backed Laravel tests; only green results publish cpanel-release. The cPanel job checks that branch for releases, stages Composer dependencies with PHP 8.4, blocks schema-changing releases until the database is backed up and migrations are approved, preserves .env and uploads, deploys safely, and checks HTTPS endpoints.
+
+From cPanel Terminal:
+
+~~~bash
+cd /home2/carfolkl/carfolk-repo
+git pull --ff-only origin main
+command -v flock rsync tar git composer curl
+mkdir -p /home2/carfolkl/.carfolk-deploy
+install -m 700 infra/cpanel/deploy.sh /home2/carfolkl/carfolk-deploy.sh
+bash -n /home2/carfolkl/carfolk-deploy.sh
+~~~
+
+When the GitHub Actions "Carfolk - cPanel Release" run has passed, cpanel-release exists, and backups are verified, do the **first deployment manually**:
+
+~~~bash
+touch /home2/carfolkl/.carfolk-deploy/enabled
+bash /home2/carfolkl/carfolk-deploy.sh
+~~~
+
+After a successful first run, open cPanel → Cron Jobs, select **Every five minutes** (*/5 * * * *), and enter this exact command:
+
+~~~bash
+/bin/bash /home2/carfolkl/carfolk-deploy.sh >> /home2/carfolkl/.carfolk-deploy/cron.log 2>&1
+~~~
+
+To pause automatic releases immediately:
+
+~~~bash
+rm /home2/carfolkl/.carfolk-deploy/enabled
+~~~
+
+Deployment logs and code backups are stored privately under /home2/carfolkl/.carfolk-deploy. Production Laravel data and photos are never replaced, and database migrations are never automated. This shared-hosting strategy provides best-effort rollback, not atomic zero-downtime release switching. Confirm a good HTTPS smoke test and admin login before enabling Cron.
+
+**IMPORTANT: alternative integration below is NOT the same system.** The older protected SSH workflow (.github/workflows/hostpinnacle-cpanel-deploy.yml) assumes a separate ~/carfolk/shared + symlink release layout and dedicated GitHub SSH secrets. It is not configured for the already-running /home2/carfolkl/carfolk-api installation. Keep CARFOLK_DEPLOY_ENABLED disabled and do **not** enable that SSH workflow or run its deploy-release.sh alongside this Cron approach. Choose only one deployment strategy.
+
+---
+
 # HostPinnacle Silver cPanel — Carfolk single-host CI/CD
 
 **Status: PREPARED, DISABLED, NOT DEPLOYED.** This replaces the repository's Nginx/VPS deployment method for an Apache/cPanel account. Existing GitHub Pages remains a noindex preview.
