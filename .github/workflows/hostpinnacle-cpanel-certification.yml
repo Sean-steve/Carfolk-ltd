@@ -1,0 +1,43 @@
+name: Carfolk cPanel — Deployment Template Certification
+on:
+  push:
+    branches: [main, "phase/**"]
+    paths:
+      - "infra/cpanel/**"
+      - ".github/workflows/hostpinnacle-cpanel-*.yml"
+  pull_request:
+    paths:
+      - "infra/cpanel/**"
+      - ".github/workflows/hostpinnacle-cpanel-*.yml"
+permissions:
+  contents: read
+jobs:
+  validate-cpanel-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring,pdo_pgsql,pgsql,fileinfo,openssl
+      - name: Shell syntax
+        run: |
+          bash -n infra/cpanel/preflight.sh
+          bash -n infra/cpanel/deploy-release.sh
+      - name: PHP public bootstrap syntax
+        run: php -l infra/cpanel/front-controller.php
+      - name: Verify safe defaults and fail-closed initial activation
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '^Header always set X-Robots-Tag "noindex, nofollow"' infra/cpanel/public.htaccess
+          grep -q 'CARFOLK_LEADS_ENABLED=false' infra/cpanel/preflight.sh
+          grep -q 'CARFOLK_SEO_ENABLED=false' infra/cpanel/preflight.sh
+          grep -q '.deploy-approved' infra/cpanel/preflight.sh
+          grep -q "vars.CARFOLK_DEPLOY_ENABLED == 'enabled'" .github/workflows/hostpinnacle-cpanel-deploy.yml
+          test ! -e "$HOME/carfolk/shared/.deploy-approved"
+          if bash infra/cpanel/preflight.sh > /tmp/cpanel-preflight.out 2>&1; then
+            echo 'Unsafe preflight unexpectedly accepted an unprovisioned host'
+            exit 1
+          fi
+          echo 'cPanel deployment template is safe-by-default; live host certification remains separate.'
