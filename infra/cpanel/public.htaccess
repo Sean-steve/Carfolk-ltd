@@ -15,6 +15,7 @@ RewriteCond %{HTTP:X-XSRF-TOKEN} .
 RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-TOKEN}]
 # Only vetted photographic formats may be served from public upload storage.
 # Uploaded scripts, HTML, SVG and extensionless files must never execute or render publicly.
+RewriteRule ^storage/.*\.(?:php|phtml|phps|phar)(?:\.|$) - [F,NC]
 RewriteRule ^storage/(?!.*\.(?:jpe?g|png|webp)$) - [F,NC]
 # Laravel routes operate on their original REQUEST_URI.
 RewriteRule ^(api(?:/.*)?|manage(?:/.*)?|listing/.*|robots\.txt|sitemap\.xml|up|local/privacy)$ index.php [END,QSA]
