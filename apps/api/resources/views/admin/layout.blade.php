@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#101622">
 <title>@yield('title','Dealership Administration') | Carfolk LTD</title>
 <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+@stack('styles')
 </head>
 <body>
 <div class="admin-app">

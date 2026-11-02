@@ -88,3 +88,34 @@ test('mobile showroom and listing remain usable with real data',async({page},tes
  await expect(page.getByRole('heading',{name:'Honda Fit'})).toBeVisible();
  await expect(page.getByText('KES 1,850,000').first()).toBeVisible();
 });
+
+
+test('authenticated Carfolk command center is usable on desktop and mobile',async({page},testInfo)=>{
+ test.skip(!password,'CI-only administrator test password required');
+ await page.goto(admin+'/manage/login');
+ await page.locator('#email').fill('cert-admin@example.invalid');
+ await page.locator('#password').fill(password!);
+ await page.getByRole('button',{name:/Sign in to dashboard/i}).click();
+
+ await expect(page.getByRole('heading',{name:'Dealership Overview'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Your showroom at a glance.'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Stock composition'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Enquiry trend'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Recent customer enquiries'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Upcoming viewings'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Recently added vehicles'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Recent activity'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Operational alerts'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Quick actions'})).toBeVisible();
+ await expect(page.locator('.command-chart-day')).toHaveCount(7);
+ await expect(page.locator('.command-metric')).toHaveCount(8);
+ await expect(page.getByText('Asking prices, not sales proceeds')).toBeVisible();
+ await expect(page.getByText('Environment note:')).toHaveCount(0);
+ const css=await page.locator('.command-intro').evaluate(node=>getComputedStyle(node).backgroundImage);
+ expect(css).toContain('gradient');
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth - document.documentElement.clientWidth);
+ expect(overflow).toBeLessThanOrEqual(2);
+ await page.locator('.command-quick').getByRole('link',{name:/Customer follow-ups/}).click();
+ await expect(page.getByRole('heading',{name:'Customer Enquiries'})).toBeVisible();
+ testInfo.annotations.push({type:'evidence',description:'Carfolk authenticated operational overview and navigation certified on '+testInfo.project.name});
+});
