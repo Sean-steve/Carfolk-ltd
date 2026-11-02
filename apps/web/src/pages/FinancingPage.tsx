@@ -30,6 +30,7 @@ export function FinancingPage({query}:{query:string}){
     <dl><div><dt>Vehicle amount</dt><dd>{kes(price)}</dd></div><div><dt>Deposit</dt><dd>{kes(Math.round(result.depositAmount))}</dd></div><div><dt>Financed principal</dt><dd>{kes(Math.round(result.principal))}</dd></div><div><dt>Total estimated interest</dt><dd>{kes(Math.round(result.totalInterest))}</dd></div><div className="finance-result__grand"><dt>Estimated total incl. deposit</dt><dd>{kes(Math.round(result.totalCost))}</dd></div></dl>
     <a href="#/contact" className="button button--primary">Contact Carfolk <ArrowRight size={18}/></a>
    </div></div>
+   <div className="buyer-finance-guide"><h2>Before discussing financing</h2><div className="buyer-finance-guide__grid"><article><strong>1. Confirm the listed price</strong><p>Prices may change. Ask Carfolk for the current vehicle price and availability.</p></article><article><strong>2. Check real lender terms</strong><p>Interest, fees and loan requirements must come from a lender. These examples do not determine eligibility.</p></article><article><strong>3. Budget beyond repayments</strong><p>Consider insurance, ownership transfer, maintenance and operating expenses separately.</p></article></div></div>
    <div className="finance-page__bottom"><h2>Explore your vehicle choices.</h2><p>Browse Carfolk's published listings, then confirm terms directly with the dealership.</p><a className="button button--outline" href="#/cars">Browse Cars <ArrowRight size={17}/></a></div>
   </section></Shell>;
 }

@@ -36,9 +36,9 @@ export function CataloguePage({query}:{query:string}){
      <label className="catalogue-filter-label" htmlFor="car-query">Search vehicles</label><div className="catalogue-search-field"><Search size={16}/><input id="car-query" value={draft.q} onChange={e=>select('q',e.target.value)} maxLength={100} placeholder="Make, model or keyword"/></div>
      <Select label="Make" value={draft.make} items={makes} onChange={v=>select('make',v)}/>
      <Select label="Model" value={draft.model} items={models} onChange={v=>select('model',v)}/>
-     <div className="catalogue-filter-divider"/><div className="catalogue-filter-title">Price range (KES)</div>
+     <div className="catalogue-filter-divider"/><div className="catalogue-filter-title">Price range (KES)</div><p className="catalogue-filter-help">Set a budget in Kenya shillings. Leave either field empty for no limit.</p>
      <div className="catalogue-two"><label>Minimum<input type="number" min="0" step="50000" value={draft.minPrice} onChange={e=>select('minPrice',e.target.value)} placeholder="Any"/></label><label>Maximum<input type="number" min="0" step="50000" value={draft.maxPrice} onChange={e=>select('maxPrice',e.target.value)} placeholder="Any"/></label></div>
-     <div className="catalogue-filter-divider"/><div className="catalogue-filter-title">Model year</div>
+     <div className="catalogue-filter-divider"/><div className="catalogue-filter-title">Model year</div><p className="catalogue-filter-help">Choose the oldest and newest model years you would consider.</p>
      <div className="catalogue-two"><label>From<input type="number" min="1950" max="2035" value={draft.minYear} onChange={e=>select('minYear',e.target.value)} placeholder="Any"/></label><label>To<input type="number" min="1950" max="2035" value={draft.maxYear} onChange={e=>select('maxYear',e.target.value)} placeholder="Any"/></label></div>
      <div className="catalogue-filter-divider"/>
      <Select label="Body type" value={draft.body} items={opts.data?.bodies??[]} onChange={v=>select('body',v)}/>
@@ -53,12 +53,13 @@ export function CataloguePage({query}:{query:string}){
     <div className="catalogue-results__header"><div><span className="eyebrow eyebrow--red">DISCOVER YOUR NEXT VEHICLE</span><h2>Cars for Sale <span>({data?.meta.total??'—'})</span></h2></div>
      <div className="catalogue-actions"><button className="catalogue-mobile-filter" type="button" onClick={()=>setMobileOpen(true)} aria-expanded={mobileOpen}><SlidersHorizontal size={17}/> Filters</button>
       <label htmlFor="sort">Sort by<select id="sort" value={filters.sort} onChange={e=>patch('sort',e.target.value as SortBy)}><option value="recent">Latest / featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="year-desc">Newest model year</option><option value="mileage-asc">Lowest mileage</option></select></label></div></div>
+    <p className="catalogue-guidance"><Info size={17}/> Results reflect Carfolk's currently published stock. Select a car to check its complete details or use Compare to build a shortlist of up to three.</p>
     <div className="catalogue-pills"><button type="button" className={!filters.body&&!filters.maxPrice?'is-active':''} onClick={clear}>All cars</button><button type="button" className={filters.body==='SUV'?'is-active':''} onClick={()=>patch('body','SUV')}>SUVs</button><button type="button" className={filters.body==='Hatchback'?'is-active':''} onClick={()=>patch('body','Hatchback')}>Hatchbacks</button><button type="button" className={filters.maxPrice==='2000000'?'is-active':''} onClick={()=>patch('maxPrice','2000000')}>Under KES 2M</button></div>
     {!!chips.length&&<div className="catalogue-chips">{chips.map(k=><button type="button" key={k} onClick={()=>patch(k,'')}>{labels[k]}: {filters[k]} <X size={13}/></button>)}</div>}
     {loading?<div className="catalogue-no-results" role="status"><h3>Loading Carfolk vehicles…</h3></div>:
      !ready||error?<div className="catalogue-no-results"><Info size={40}/><h3>Live catalogue unavailable</h3><p>{error??'Please try again shortly.'}</p></div>:
      result.length?<div className="catalogue-listing-grid">{result.map(car=><ListingCard key={car.id} car={car} onLimit={()=>setNotice('Choose up to three vehicles to compare.')}/>)}</div>:
-     <div className="catalogue-no-results"><CarFront size={40}/><h3>No matching vehicles</h3><button className="button button--primary" type="button" onClick={clear}>Clear filters</button></div>}
+     <div className="catalogue-no-results"><CarFront size={40}/><h3>No matching vehicles</h3><p>Try a broader model, a different price range or clear the filters to see all available listings.</p><button className="button button--primary" type="button" onClick={clear}>Clear filters</button></div>}
     {!!data?.meta&&data.meta.last_page>1&&<nav className="catalogue-more" aria-label="Vehicle result pages"><p>Page {data.meta.current_page} of {data.meta.last_page} · {data.meta.total} vehicles</p><div className="catalogue-page-controls">{page>1&&<a className="button button--outline" href={href(filters,page-1)}>← Previous page</a>}{page<data.meta.last_page&&<a className="button button--primary" href={href(filters,page+1)}>Next page →</a>}</div></nav>}
    </section>
   </div>
