@@ -18,14 +18,15 @@ const rows:Row[]=[
 export function ComparePage(){
  const {selected,vehicles:cars,loading,remove,clear}=useCompare();
  return <Shell><section className="catalogue-intro catalogue-intro--compact"><div className="container catalogue-intro__inner"><div className="catalogue-breadcrumb"><a href="#/">Home</a><span>/</span> Compare Cars</div><span className="eyebrow">MAKE THE RIGHT CHOICE</span><h1>Compare with <em>confidence.</em></h1><p>Choose up to three published vehicles and see their details side by side.</p></div></section>
- <div className="container compare-page"><div className="compare-page__heading"><div><h2>Your shortlist <span>({selected.length} / 3)</span></h2></div>{selected.length>0&&<button type="button" className="catalogue-clear" onClick={clear}>Clear shortlist</button>}</div>
+ <div className="container compare-page"><div className="buyer-inline-guide"><GitCompareArrows size={20}/><span><strong>How comparison works:</strong> On a vehicle card, choose Compare to add it here. A dash (—) means the information was not supplied; ask Carfolk before deciding.</span></div><div className="compare-page__heading"><div><h2>Your shortlist <span>({selected.length} / 3)</span></h2></div>{selected.length>0&&<button type="button" className="catalogue-clear" onClick={clear}>Clear shortlist</button>}</div>
  {loading?<div className="compare-empty" role="status">Loading comparison…</div>:
- cars.length===0?<div className="compare-empty"><GitCompareArrows size={42}/><h3>Nothing to compare yet</h3><a className="button button--primary" href="#/cars">Browse cars <ArrowRight size={17}/></a></div>:
+ cars.length===0?<div className="compare-empty"><GitCompareArrows size={42}/><h3>Nothing to compare yet</h3><p>Browse the showroom and select Compare on two or three cars to build your shortlist.</p><a className="button button--primary" href="#/cars">Browse cars <ArrowRight size={17}/></a></div>:
  <div className="comparison-sheet"><div className="comparison-sheet__table" style={{gridTemplateColumns:`minmax(145px,.7fr) repeat(${cars.length},minmax(225px,1fr))`}}>
   <div className="comparison-sheet__label comparison-sheet__header">Vehicle</div>
   {cars.map(car=><div key={car.id} className="comparison-sheet__car"><button type="button" aria-label={'Remove '+vehicleName(car)} onClick={()=>remove(car.id)}><X size={16}/></button><a href={toCar(car.slug)}><PreviewPhoto src={car.images[0]?.url??''} alt={car.images[0]?.alt_text??vehicleName(car)}/></a><strong>{vehicleName(car)}</strong><small>{car.year} · {car.status}</small><a className="comparison-sheet__link" href={toCar(car.slug)}>View details <ArrowRight size={14}/></a></div>)}
   {rows.map((row,i)=><div style={{display:'contents'}} key={row.label}><div className={'comparison-sheet__label'+(i%2===0?' is-alt':'')}>{row.label}</div>{cars.map(car=><div key={car.id} className={'comparison-sheet__cell'+(i%2===0?' is-alt':'')}>{row.value(car)}</div>)}</div>)}
  </div></div>}
+ {cars.length>0&&<div className="buyer-next-step"><div><strong>Ready to ask about a shortlisted car?</strong><p>Open the vehicle details to request a viewing or enquire about missing specifications.</p></div><a className="button button--primary" href={toCar(cars[0].slug)}>View shortlisted car <ArrowRight size={16}/></a></div>}
  <a className="button button--outline" href="#/cars">Add more vehicles <ArrowRight size={17}/></a>
  </div></Shell>;
 }

@@ -49,13 +49,17 @@ export function VehicleDetailPage({slug}:{slug:string}){
    </div>
    <div className="detail-panels"><section className="detail-panel"><span className="eyebrow eyebrow--red">OVERVIEW</span><h2>About this vehicle</h2><p>{vehicle.description||'Contact Carfolk for a full vehicle description, inspection details and specifications.'}</p></section>
     <section className="detail-panel"><span className="eyebrow eyebrow--red">SPECIFICATIONS</span><h2>Vehicle details</h2><div className="detail-spec-grid">{specs.map(([label,value])=><div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div></section>
+    <section className="detail-panel detail-panel--visit"><span className="eyebrow eyebrow--red">BEFORE YOU VISIT</span><h2>Confirm the essentials with Carfolk</h2><p>Online details are a starting point. Before travelling, check the vehicle's current availability and ask the dealership to confirm the viewing location and time.</p>
+     <ul className="buyer-checklist"><li><Check size={17}/> Ask for current condition and service/inspection information.</li><li><Check size={17}/> Confirm documentation, applicable costs and any outstanding questions.</li><li><Check size={17}/> Arrange an independent inspection where appropriate before making a purchase decision.</li></ul>
+     {vehicle.status==='available'?<a href={toVehicleViewing(vehicle.slug)} className="text-link">Request a preferred viewing time <ArrowRight size={16}/></a>:<a href={toVehicleEnquiry(vehicle.slug)} className="text-link">Ask about availability <ArrowRight size={16}/></a>}
+    </section>
     {vehicle.features.length>0&&<section className="detail-panel"><span className="eyebrow eyebrow--red">FEATURES</span><h2>Listed highlights</h2><div className="detail-features">{vehicle.features.map(f=><span key={f}><Check size={18}/>{f}</span>)}</div></section>}
    </div>
   </div>
   <aside className="detail-purchase">
    <div className="detail-purchase__price"><span>Listed price</span><strong>{kes(vehicle.price_kes)}</strong></div>
    <div className="detail-purchase__quick"><span><Gauge size={17}/>{vehicle.mileage_km===null?'Mileage unlisted':vehicle.mileage_km.toLocaleString('en-KE')+' km'}</span><span><Fuel size={17}/>{vehicle.fuel_type??'Fuel unlisted'}</span><span><Settings2 size={17}/>{vehicle.transmission??'Transmission unlisted'}</span><span><MapPin size={17}/>{vehicle.location??'Location unlisted'}</span></div>
-   <div className="detail-purchase__note"><Info size={19}/><span>{vehicle.status==='available'?'Available':vehicle.status==='reserved'?'Reserved':'Vehicle has been marked sold.'}</span></div>
+   <div className="detail-purchase__note"><Info size={19}/><span>{vehicle.status==='available'?'Available · confirm with the dealership before travelling':vehicle.status==='reserved'?'Reserved · ask about availability':'Vehicle has been marked sold.'}</span></div>
    {vehicle.status==='available'&&<a className="button button--primary" href={toVehicleViewing(vehicle.slug)}><CalendarDays size={18}/> Request a viewing <ArrowUpRight size={18}/></a>}
    <a className="button button--outline" href={toVehicleEnquiry(vehicle.slug)}>Enquire about this car <ArrowUpRight size={18}/></a>
    <a className="button button--outline" href={'#/finance?vehicle='+encodeURIComponent(vehicle.slug)}><Tag size={18}/> Estimate payments</a>

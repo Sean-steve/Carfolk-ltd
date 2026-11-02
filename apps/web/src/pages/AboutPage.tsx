@@ -26,6 +26,13 @@ export function AboutPage(){
    <a className="text-link" href="#/contact">Talk to Carfolk <ArrowRight size={17}/></a></div>
   </section>
 
+  <section className="container about-journey" aria-labelledby="carfolk-process-title"><div className="section-heading"><div><span className="eyebrow eyebrow--red">FROM RESEARCH TO VIEWING</span><h2 id="carfolk-process-title">Your path to a more informed decision.</h2></div><p>Each step helps you understand the options without making unsupported promises about a vehicle.</p></div>
+   <div className="about-journey__grid">
+    <article><span>01</span><h3>Explore published vehicles</h3><p>Start with the actual catalogue, refine your search and review the listed price and specifications.</p></article>
+    <article><span>02</span><h3>Build your shortlist</h3><p>Use side-by-side comparisons to identify what matters and flag details you still need confirmed.</p></article>
+    <article><span>03</span><h3>Ask the dealership</h3><p>Send a question or a preferred viewing time. Carfolk will need to confirm any proposed visit.</p></article>
+    <article><span>04</span><h3>Inspect before deciding</h3><p>Check documentation, condition and independent inspection options before committing to a purchase.</p></article>
+   </div></section>
   <section className="about-values">
    <div className="container"><div className="section-heading"><div><span className="eyebrow eyebrow--red">WHAT GUIDES THE EXPERIENCE</span><h2>Built for better decisions.</h2></div><p>Thoughtful tools make it easier to consider the options and ask the right questions.</p></div>
     <div className="about-values__grid">{principles.map(p=><article key={p.title} className="about-value"><div className="about-value__icon">{p.icon}</div><h3>{p.title}</h3><p>{p.body}</p></article>)}</div>

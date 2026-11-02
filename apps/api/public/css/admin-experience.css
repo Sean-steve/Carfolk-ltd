@@ -1,0 +1,42 @@
+/* Phase A.1 — contextual, responsive admin workspaces. No framework or external JavaScript required. */
+.experience-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:22px}
+.experience-stats>div,.experience-stats>a{display:flex;flex-direction:column;min-width:0;background:#fff;border:1px solid #e0e6ee;border-radius:12px;padding:17px 20px;text-decoration:none;box-shadow:0 7px 18px #16203908;gap:5px}
+.experience-stats>a:hover,.experience-stats>a.is-current{border-color:#e21b2d;color:#17283b;background:#fff9f9}
+.experience-stats span{font:800 10px var(--heading);letter-spacing:.06em;color:#69778a}
+.experience-stats strong{font:800 29px var(--heading);color:#18273a}
+.experience-stats small{color:#7c8899;font-size:11px}
+.experience-stats--settings{grid-template-columns:repeat(2,minmax(0,1fr))}
+.experience-panel{padding:26px}
+.experience-title-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 20px}
+.experience-title-row h2{margin:7px 0 0}
+.experience-title-row h2 small{font:600 13px var(--font);color:#8491a0}
+.experience-filters{display:flex;gap:11px;align-items:end;flex-wrap:wrap;background:#f7f9fc;border:1px solid #e7ebf1;border-radius:10px;padding:18px;margin:0 0 20px}
+.experience-filters label,.experience-inline-filter label{display:flex;flex-direction:column;gap:5px;color:#4c5c70;font:800 11px var(--heading)}
+.experience-filters label:first-child{flex:1 1 210px}
+.experience-filters label{flex:1 1 135px}
+.experience-filters input,.experience-filters select,.experience-inline-filter select{width:100%;min-width:0;height:42px;border:1px solid #cbd5e2;border-radius:7px;padding:8px 11px;background:white;color:#26384d;font:500 13px var(--font)}
+.experience-filters .btn{height:42px}
+.experience-inline-filter{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.experience-inline-filter select{min-width:165px}
+.experience-guidance{border:1px solid #dbe6f2;border-left:3px solid #e21b2d;border-radius:8px;background:#f8fafc;color:#475970;padding:13px 17px;font-size:12px;line-height:1.7;margin:0 0 22px}
+.experience-guidance strong{color:#27374d}
+.experience-footnote{margin:18px 0 0;color:#6c7c8d;font-size:12px;line-height:1.65}
+.experience-warning{display:inline-flex;color:#ad5c1d;background:#fff3e5;border:1px solid #f4ddbd;border-radius:5px;padding:2px 7px;font:800 10px var(--heading);white-space:nowrap;margin-top:4px}
+.experience-empty{text-align:center;display:grid;justify-items:center;gap:7px;padding:23px}
+.experience-empty strong{font:800 15px var(--heading);color:#28394d}
+.experience-empty p{font-size:12px;margin:0 0 9px;color:#7b8999;white-space:normal}
+.experience-status-form{display:flex;gap:7px;align-items:center;min-width:195px}
+.experience-status-form select{margin:0}
+.experience-summary-banner{display:flex;align-items:center;gap:13px;flex-wrap:wrap;background:#f7f9fc;border:1px solid #e2e8ef;border-radius:10px;padding:14px 19px;max-width:1100px;margin:0 0 18px}
+.experience-summary-banner strong{font:800 14px var(--heading)}.experience-summary-banner small{color:#738196}
+.experience-section-label{grid-column:1/-1;padding:14px 0 3px;margin-top:12px;border-top:1px solid #e9eef3}
+.experience-section-label:first-child{border:0;margin-top:0;padding-top:0}
+.experience-section-label h3,.experience-form-heading h3{font-size:17px;margin:0 0 4px}
+.experience-section-label p,.experience-form-heading p{font-size:12px;color:#687b90;margin:0}
+.experience-form-heading{margin:0 0 18px}
+.experience-panel .admin-table{min-width:660px}
+.experience-panel .table-scroll{scrollbar-color:#c9d3df transparent;scrollbar-width:thin}
+.experience-panel .table-scroll:focus-within{outline-offset:2px}
+@media(max-width:1100px){.experience-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:670px){.experience-panel{padding:18px}.experience-stats{gap:9px}.experience-stats>div,.experience-stats>a{padding:14px}.experience-stats strong{font-size:25px}.experience-title-row{align-items:flex-start}.experience-filters{padding:13px}.experience-filters label{flex:1 1 100%}.experience-filters .btn{flex:1 1 135px}.experience-inline-filter{width:100%}.experience-inline-filter label{flex:1}.experience-inline-filter select{min-width:0}.experience-status-form{min-width:175px}}
+@media(max-width:410px){.experience-stats{grid-template-columns:1fr 1fr}.experience-stats span{font-size:9px}.experience-stats strong{font-size:22px}.experience-stats--settings{grid-template-columns:1fr}}

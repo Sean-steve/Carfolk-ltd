@@ -1,0 +1,36 @@
+/* Phase A.1 — return helpful decision context, not developer banners or placeholder promises. */
+.buyer-steps{background:#f7f9fc;padding-top:76px;padding-bottom:78px}
+.buyer-steps__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px;margin-top:34px}
+.buyer-steps__grid article{display:flex;flex-direction:column;border:1px solid #e2e8f0;background:#fff;box-shadow:var(--shadow);border-radius:16px;padding:28px;min-width:0}
+.buyer-steps__grid article>span{display:inline-grid;place-items:center;height:46px;width:46px;border-radius:12px;background:#fff0f1;color:var(--red);font:800 18px var(--head)}
+.buyer-steps__grid h3{font-size:19px;margin:21px 0 9px}
+.buyer-steps__grid p{font-size:13px;color:#637489;line-height:1.8;flex:1}
+.buyer-steps__grid a{display:inline-flex;align-items:center;gap:7px;color:var(--red);font:800 12px var(--head);text-decoration:none;margin-top:9px}
+.buyer-steps__grid a:hover{text-decoration:underline}
+.catalogue-filter-help{color:#778699;font-size:11px;line-height:1.6;margin:2px 0 13px}
+.catalogue-guidance{display:flex;gap:10px;align-items:start;color:#556b7f;font-size:12px;line-height:1.7;padding:13px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;margin:10px 0 18px}
+.catalogue-guidance svg{flex:none;color:var(--red);margin-top:2px}
+.buyer-checklist{list-style:none;margin:15px 0 20px;padding:0;display:grid;gap:12px}
+.buyer-checklist li{display:flex;gap:10px;align-items:start;color:#475e73;font-size:13px;line-height:1.6}
+.buyer-checklist li svg{flex:none;color:#15916b;margin-top:2px}
+.detail-panel--visit{background:linear-gradient(120deg,#fff,#f9fafc)}
+.detail-panel--visit .text-link{font-size:13px}
+.buyer-inline-guide{display:flex;gap:13px;align-items:flex-start;padding:17px 20px;margin:0 0 25px;background:#f8fafc;border:1px solid #dfe7f0;border-radius:10px;color:#556a7c;font-size:12px;line-height:1.7}
+.buyer-inline-guide svg{color:var(--red);flex:none;margin-top:2px}
+.buyer-inline-guide strong{color:#27384c}
+.buyer-next-step{display:flex;justify-content:space-between;align-items:center;gap:17px;padding:22px;background:#f7f9fc;border:1px solid #e1e7ef;border-radius:12px;margin:23px 0}
+.buyer-next-step strong{font:800 15px var(--head)}
+.buyer-next-step p{color:#647488;font-size:12px;margin:6px 0 0}
+.buyer-next-step .button{flex-shrink:0}
+.buyer-finance-guide{margin:40px 0 22px;padding:28px;border:1px solid #e2e7f0;border-radius:14px;background:#f8fafc}
+.buyer-finance-guide h2{font-size:24px;margin:0 0 20px}
+.buyer-finance-guide__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.buyer-finance-guide__grid article{padding:18px;border:1px solid #e5eaf1;border-radius:10px;background:white}
+.buyer-finance-guide__grid strong{display:block;font:800 13px var(--head);color:#27384b}
+.buyer-finance-guide__grid p{margin:8px 0 0;font-size:12px;color:#68778b;line-height:1.7}
+.enquiry-form-card__heading p{color:#63768a;font-size:13px;line-height:1.6;margin:8px 0 0;max-width:510px}
+.enquiry-form__footer{display:flex;gap:8px;align-items:flex-start;margin:14px 0;color:#586e81;font-size:11px;line-height:1.7}
+.enquiry-form__footer svg{flex-shrink:0;margin-top:1px;color:#128367}
+@media(max-width:1050px){.buyer-steps__grid{gap:12px}.buyer-steps__grid article{padding:22px}}
+@media(max-width:760px){.buyer-steps__grid,.buyer-finance-guide__grid{grid-template-columns:1fr}.buyer-steps{padding:50px 0}.buyer-finance-guide{padding:19px}.buyer-next-step{align-items:stretch;flex-direction:column}.buyer-next-step .button{align-self:flex-start}}
+@media(max-width:550px){.catalogue-guidance,.buyer-inline-guide{padding:12px;font-size:11px}.buyer-steps__grid article{padding:20px}.buyer-next-step .button{width:100%}}

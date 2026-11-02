@@ -10,8 +10,36 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\File;
 class VehicleAdminController extends Controller {
- public function index() {
-    return view('admin.vehicles.index',['vehicles'=>Vehicle::whereNull('archived_at')->withCount('images')->latest()->paginate(15)]);
+ public function index(Request $request) {
+    $filters=$request->validate([
+        'q'=>['sometimes','nullable','string','max:80'],
+        'status'=>['sometimes','nullable','in:available,reserved,sold'],
+        'visibility'=>['sometimes','nullable','in:published,draft'],
+    ]);
+    $search=trim((string)($filters['q']??''));
+    $base=Vehicle::query()->whereNull('archived_at');
+    $vehicles=(clone $base)->withCount('images');
+    if($search!==''){
+        $vehicles->where(function($query)use($search){
+            $term='%'.str_replace(['%','_'],['\\%','\\_'],$search).'%';
+            $query->where('stock_reference','ilike',$term)
+                ->orWhere('make','ilike',$term)
+                ->orWhere('model','ilike',$term);
+        });
+    }
+    if(!empty($filters['status']))$vehicles->where('status',$filters['status']);
+    if(($filters['visibility']??'')==='published')$vehicles->where('is_published',true);
+    if(($filters['visibility']??'')==='draft')$vehicles->where('is_published',false);
+    return view('admin.vehicles.index',[
+        'vehicles'=>$vehicles->latest()->paginate(15)->withQueryString(),
+        'filters'=>['q'=>$search,'status'=>$filters['status']??'','visibility'=>$filters['visibility']??''],
+        'inventorySummary'=>[
+            'total'=>(clone $base)->count(),
+            'published'=>(clone $base)->where('is_published',true)->count(),
+            'drafts'=>(clone $base)->where('is_published',false)->count(),
+            'available'=>(clone $base)->where('is_published',true)->where('status','available')->count(),
+        ],
+    ]);
  }
  public function create() {return view('admin.vehicles.form',['vehicle'=>new Vehicle(),'mode'=>'create']);}
  public function store(VehicleRequest $request) {
