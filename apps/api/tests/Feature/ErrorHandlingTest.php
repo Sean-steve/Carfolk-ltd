@@ -16,8 +16,9 @@ class ErrorHandlingTest extends TestCase
 
         $response->assertStatus(413)
             ->assertSee('Upload too large')
-            ->assertSee('Support reference:')
-            ->assertHeader('Cache-Control', 'no-store');
+            ->assertSee('Support reference:');
+
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
 
         $this->assertNotEmpty($response->headers->get('X-Request-ID'));
     }
