@@ -16,6 +16,12 @@ grep -qx 'APP_ENV=production' "$shared/.env" || { echo 'APP_ENV must be producti
 grep -qx 'APP_DEBUG=false' "$shared/.env" || { echo 'APP_DEBUG must be false' >&2; exit 1; }
 grep -qx 'SESSION_SECURE_COOKIE=true' "$shared/.env" || { echo 'Secure session cookies required' >&2; exit 1; }
 grep -q '^APP_URL=https://' "$shared/.env" || { echo 'Canonical HTTPS origin missing' >&2; exit 1; }
+grep -Eq '^APP_KEY=base64:[A-Za-z0-9+/=]{40,}$' "$shared/.env" || { echo 'Production encryption key is missing or invalid' >&2; exit 1; }
+grep -qx 'DB_CONNECTION=pgsql' "$shared/.env" || { echo 'Carfolk requires PostgreSQL' >&2; exit 1; }
+grep -qx 'CARFOLK_LOCAL_ENQUIRIES_ENABLED=false' "$shared/.env" || { echo 'Local enquiry test mode must be explicitly disabled' >&2; exit 1; }
+app_origin="$(sed -n 's/^APP_URL=//p' "$shared/.env" | tail -1)"
+public_origin="$(sed -n 's/^CARFOLK_PUBLIC_URL=//p' "$shared/.env" | tail -1)"
+[[ -n "$public_origin" && "$app_origin" == "$public_origin" ]] || { echo 'APP_URL and CARFOLK_PUBLIC_URL must match' >&2; exit 1; }
 if grep -Eq '^(APP_URL|CARFOLK_PUBLIC_URL)=.*example\\.com' "$shared/.env"; then
  echo 'Template example.com domain detected; real domain required' >&2; exit 1
 fi
@@ -27,7 +33,7 @@ stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 release="$root/releases/$stamp"
 [[ ! -e "$release" ]] || { echo "Release directory exists" >&2; exit 1; }
 mkdir -p "$release" "$shared/public-storage" "$root/releases"
-[[ ! -e "$src/apps/api/.env" ]] || { echo 'Checkout contains an .env file; refusing to deploy copied secrets' >&2; exit 1; }
+[[ ! -e "$src/apps/api/.env" && ! -e "$src/apps/web/.env" && ! -e "$src/apps/web/.env.production" ]] || { echo 'Checkout contains live .env files; refusing to copy secrets into a release' >&2; exit 1; }
 cp -a "$src/." "$release/"
 ln -s "$shared/.env" "$release/apps/api/.env"
 images="$release/apps/api/storage/app/public"

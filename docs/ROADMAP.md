@@ -10,3 +10,5 @@
 **No production launch is implied by deployment templates, feature tests or a GitHub Pages preview.** Only Model A (single dealership, its own inventory). Marketplace accounts, checkout, M-PESA and finance underwriting are out of scope.
 
 Phase 6 details: docs/PHASE_6_RELEASE.md and infra/docs/launch-acceptance.md.
+
+**Production activation:** guarded, unpublished inventory CSV import and automated runtime launch audit are implemented; operator instructions: docs/PRODUCTION_ACTIVATION.md. No verified owner stock/business contacts/domain/server, privacy approval or real customer-enquiry sign-off has been supplied. Live launch remains NO GO.
