@@ -32,9 +32,9 @@
   };
   const serverFileLimit = parseBytes(form.dataset.serverFileLimit);
   const serverPostLimit = parseBytes(form.dataset.serverPostLimit);
-  const fileLimit = Math.min(8 * mib, serverFileLimit);
+  const fileLimit = Math.min(8 * mib, serverFileLimit > 0 ? serverFileLimit : Infinity);
   // Leave a margin for multipart boundaries and the CSRF token.
-  const postLimit = serverPostLimit - 256 * 1024;
+  const postLimit = serverPostLimit > 0 ? serverPostLimit - 256 * 1024 : Infinity;
   const availableSlots = 20 - Number(form.dataset.existingPhotos || 0);
   const validTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
   const originalLabel = submit.textContent;
