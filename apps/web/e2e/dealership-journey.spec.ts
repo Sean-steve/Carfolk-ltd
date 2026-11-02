@@ -119,3 +119,49 @@ test('authenticated Carfolk command center is usable on desktop and mobile',asyn
  await expect(page.getByRole('heading',{name:'Customer Enquiries'})).toBeVisible();
  testInfo.annotations.push({type:'evidence',description:'Carfolk authenticated operational overview and navigation certified on '+testInfo.project.name});
 });
+
+
+test('restored public buyer guidance is coherent across vehicle discovery, comparison, finance and contact',async({page})=>{
+ await page.goto('/#/');
+ await expect(page.getByRole('heading',{name:'From shortlist to showroom.'})).toBeVisible();
+ await page.goto('/#/cars');
+ await expect(page.getByText(/Results reflect Carfolk's currently published stock/)).toBeVisible();
+ await expect(page.getByText(/Set a budget in Kenya shillings/)).toBeVisible();
+ await page.goto('/#/cars/ci-toyota-rav4');
+ await expect(page.getByRole('heading',{name:'Confirm the essentials with Carfolk'})).toBeVisible();
+ await expect(page.getByText(/independent inspection where appropriate/)).toBeVisible();
+ await page.goto('/#/compare');
+ await expect(page.getByText(/How comparison works/)).toBeVisible();
+ await page.goto('/#/finance');
+ await expect(page.getByRole('heading',{name:'Before discussing financing'})).toBeVisible();
+ await page.goto('/#/about');
+ await expect(page.getByRole('heading',{name:'Your path to a more informed decision.'})).toBeVisible();
+ await page.goto('/#/contact?intent=test-drive&vehicle=ci-toyota-rav4');
+ await expect(page.getByRole('heading',{name:'Plan your visit with confidence.'})).toBeVisible();
+ await expect(page.getByText('A viewing request is not an automatic appointment or vehicle reservation.')).toBeVisible();
+});
+
+test('admin lists retain useful search, status filters and contextual form instructions',async({page})=>{
+ test.skip(!password,'CI-only administrator test password required');
+ await page.goto(admin+'/manage/login');
+ await page.locator('#email').fill('cert-admin@example.invalid');
+ await page.locator('#password').fill(password!);
+ await page.getByRole('button',{name:/Sign in to dashboard/i}).click();
+ await page.goto(admin+'/manage/vehicles');
+ await expect(page.getByText('ACTIVE STOCK')).toBeVisible();
+ await page.locator('input[name="q"]').fill('Honda');
+ await page.getByRole('button',{name:'Apply filters'}).click();
+ await expect(page.locator('table')).toContainText('Honda');
+ await expect(page.locator('table')).not.toContainText('Toyota');
+ await page.goto(admin+'/manage/vehicles/create');
+ await expect(page.getByRole('heading',{name:'Identity and pricing'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Public visibility'})).toBeVisible();
+ await page.goto(admin+'/manage/enquiries');
+ await expect(page.getByText(/Follow-up flow/)).toBeVisible();
+ await page.goto(admin+'/manage/viewings');
+ await expect(page.getByText(/Appointment flow/)).toBeVisible();
+ await page.goto(admin+'/manage/settings');
+ await expect(page.getByText(/Key details configured/)).toBeVisible();
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+ expect(overflow).toBeLessThanOrEqual(2);
+});
