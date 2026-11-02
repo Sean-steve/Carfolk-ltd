@@ -26,10 +26,11 @@ The Laravel code cannot increase Apache/PHP hosting limits or customize an HTTP 
    - `max_execution_time = 120`
    - `max_input_time = 120`
 3. Confirm the **web-served PHP runtime** sees those values; CLI PHP settings can differ. Allow for multipart overhead above five times 8 MB.
-4. If a modest upload still returns 413, ask HostPinnacle to check Apache `LimitRequestBody`, ModSecurity/WAF audit events, proxy request-body caps and whether per-directory PHP INI overrides take effect. Do not disable ModSecurity wholesale.
-5. Log in, add **one small JPEG**, then upload **five 6–8 MB images**, and confirm image URLs, photo count, public listing, and database references. Test on iPhone/mobile Safari. Do not use customer-owned photos without permission.
-6. Verify a deliberately oversized browser selection is rejected **before network submission**, with a clear message and a usable file picker.
-7. Keep `APP_DEBUG=false`; prefer `LOG_CHANNEL=daily`, `LOG_LEVEL=warning`, `LOG_DAILY_DAYS=14` for bounded Laravel logs. Logs must remain outside `public_html`. Review hosting server errors separately from Laravel logs.
+4. **Important O5 deployment step:** the live Cron deployer is a private installed copy of `infra/cpanel/deploy.sh`. After reviewing the script diff and before shipping this release, update the installed script from the trusted repo: `install -m 700 /home2/carfolkl/carfolk-repo/infra/cpanel/deploy.sh /home2/carfolkl/carfolk-deploy.sh`. The O6 script now copies and backs up `public/js` alongside `public/css` and `public/brand`. Without this step, the browser preflight file will be missing after deployment.
+5. If a modest upload still returns 413, ask HostPinnacle to check Apache `LimitRequestBody`, ModSecurity/WAF audit events, proxy request-body caps and whether per-directory PHP INI overrides take effect. Do not disable ModSecurity wholesale.
+6. Log in, add **one small JPEG**, then upload **five 6–8 MB images**, and confirm image URLs, photo count, public listing, and database references. Test on iPhone/mobile Safari. Do not use customer-owned photos without permission.
+7. Verify a deliberately oversized browser selection is rejected **before network submission**, with a clear message and a usable file picker.
+8. Keep `APP_DEBUG=false`; prefer `LOG_CHANNEL=daily`, `LOG_LEVEL=warning`, `LOG_DAILY_DAYS=14` for bounded Laravel logs. Logs must remain outside `public_html`. Review hosting server errors separately from Laravel logs.
 
 On the current cPanel deployment topology, inspect the actual private Laravel installation, e.g.:
 
