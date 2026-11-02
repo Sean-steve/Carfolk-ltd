@@ -64,7 +64,7 @@ class AdminCommandCenterTest extends TestCase
             ->assertViewHas('askingValue', 3000000)
             ->assertSee('KES 3,000,000')
             ->assertSee('Asking prices, not sales proceeds')
-            ->assertSee('Sale', false);
+            ->assertSee('Stock status, not revenue');
     }
 
     public function test_recent_enquiries_upcoming_viewings_activity_and_operational_alerts_are_database_driven(): void
