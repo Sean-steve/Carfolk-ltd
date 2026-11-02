@@ -1,6 +1,6 @@
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import {ApiError,getOptions,getSite,getVehicle,getVehiclesByIds,listVehicles,submitEnquiry,isApiConfigured} from './client';
-const fake=<T>(value:T,status=200)=>({ok:status<400,status,json:async()=>value} as Response);
+const fake=<T>(value:T,status=200)=>({ok:status<400,status,json:async()=>value} as unknown as Response);
 beforeEach(()=>vi.stubGlobal('fetch',vi.fn()));
 afterEach(()=>vi.unstubAllGlobals());
 describe('Carfolk real backend client',()=>{
@@ -48,7 +48,7 @@ describe('Carfolk real backend client',()=>{
   fetchMock.mockResolvedValueOnce({
    ok:false,status:413,headers:new Headers({'X-Request-ID':'o6-test-reference'}),
    json:async()=>{throw new SyntaxError('Unexpected HTML response')},
-  } as Response);
+  } as unknown as Response);
   await expect(getSite()).rejects.toMatchObject({status:413,requestId:'o6-test-reference',message:'Your request is too large. Try a smaller upload or fewer photos.'});
  });
  it('does not expose server internals in API errors',async()=>{
