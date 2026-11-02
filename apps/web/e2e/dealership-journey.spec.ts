@@ -117,6 +117,22 @@ test('authenticated Carfolk command center is usable on desktop and mobile',asyn
  expect(overflow).toBeLessThanOrEqual(2);
  await page.locator('.command-quick').getByRole('link',{name:/Customer follow-ups/}).click();
  await expect(page.getByRole('heading',{name:'Customer Enquiries'})).toBeVisible();
+ await expect(page.getByText(/Follow-up flow/)).toBeVisible();
+ await page.goto(admin+'/manage/vehicles');
+ await expect(page.getByText('ACTIVE STOCK')).toBeVisible();
+ await page.locator('input[name="q"]').fill('Honda');
+ await page.getByRole('button',{name:'Apply filters'}).click();
+ await expect(page.locator('table')).toContainText('Honda');
+ await expect(page.locator('table')).not.toContainText('Toyota');
+ await page.goto(admin+'/manage/vehicles/create');
+ await expect(page.getByRole('heading',{name:'Identity and pricing'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Public visibility'})).toBeVisible();
+ await page.goto(admin+'/manage/viewings');
+ await expect(page.getByText(/Appointment flow/)).toBeVisible();
+ await page.goto(admin+'/manage/settings');
+ await expect(page.getByText(/Key details configured/)).toBeVisible();
+ const adminOverflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+ expect(adminOverflow).toBeLessThanOrEqual(2);
  testInfo.annotations.push({type:'evidence',description:'Carfolk authenticated operational overview and navigation certified on '+testInfo.project.name});
 });
 
@@ -141,27 +157,3 @@ test('restored public buyer guidance is coherent across vehicle discovery, compa
  await expect(page.getByText('A viewing request is not an automatic appointment or vehicle reservation.')).toBeVisible();
 });
 
-test('admin lists retain useful search, status filters and contextual form instructions',async({page})=>{
- test.skip(!password,'CI-only administrator test password required');
- await page.goto(admin+'/manage/login');
- await page.locator('#email').fill('cert-admin@example.invalid');
- await page.locator('#password').fill(password!);
- await page.getByRole('button',{name:/Sign in to dashboard/i}).click();
- await page.goto(admin+'/manage/vehicles');
- await expect(page.getByText('ACTIVE STOCK')).toBeVisible();
- await page.locator('input[name="q"]').fill('Honda');
- await page.getByRole('button',{name:'Apply filters'}).click();
- await expect(page.locator('table')).toContainText('Honda');
- await expect(page.locator('table')).not.toContainText('Toyota');
- await page.goto(admin+'/manage/vehicles/create');
- await expect(page.getByRole('heading',{name:'Identity and pricing'})).toBeVisible();
- await expect(page.getByRole('heading',{name:'Public visibility'})).toBeVisible();
- await page.goto(admin+'/manage/enquiries');
- await expect(page.getByText(/Follow-up flow/)).toBeVisible();
- await page.goto(admin+'/manage/viewings');
- await expect(page.getByText(/Appointment flow/)).toBeVisible();
- await page.goto(admin+'/manage/settings');
- await expect(page.getByText(/Key details configured/)).toBeVisible();
- const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
- expect(overflow).toBeLessThanOrEqual(2);
-});
