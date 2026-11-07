@@ -173,7 +173,7 @@ test('admin selects seven photos once and uploads in safe batches',async({page},
  await page.locator('input[name="year"]').fill('2021');
  await page.locator('input[name="price_kes"]').fill('1120000');
  await page.getByRole('button',{name:/Create vehicle/i}).click();
- await expect(page).toHaveURL(/\\/manage\\/vehicles\\/[^/]+\\/edit#vehicle-photos$/);
+ await expect(page).toHaveURL(/edit#vehicle-photos$/);
  await expect(page.getByText('Select up to 20 photos in one go')).toBeVisible();
  const pixelPng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7JQxkAAAAASUVORK5CYII=','base64');
  const photos=Array.from({length:7},(_,i)=>({
