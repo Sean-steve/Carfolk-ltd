@@ -48,11 +48,11 @@ export function VehicleDetailPage({slug}:{slug:string}){
   <div className="vehicle-detail__heading"><div><span className="eyebrow eyebrow--red">CARFOLK VEHICLE DETAILS</span><h1>{vehicle.make} {vehicle.model}</h1><p>{vehicle.trim??'Vehicle'} · {vehicle.year} · {vehicle.body_type??'Body unlisted'}</p></div><button className="detail-share" type="button" onClick={share}><Share2 size={18}/> Share vehicle</button></div>
   <div className="vehicle-detail__main"><div>
    <div className="vehicle-gallery">
-    <div className="vehicle-gallery__stage"><PreviewPhoto src={photo?.url??''} loading="eager" alt={photo?.alt_text??vehicleName(vehicle)+' vehicle photo'}/>
+    <div className="vehicle-gallery__stage"><PreviewPhoto src={photo?.detail_url||photo?.url||''} loading="eager" alt={photo?.alt_text??vehicleName(vehicle)+' vehicle photo'}/>
      <span className="vehicle-gallery__label">{photo?index+1+' / '+photoCount:'PHOTO PENDING'}</span>
      {images.length>0&&<><button className="vehicle-gallery__zoom" type="button" onClick={()=>setExpanded(true)}>View larger <ArrowUpRight size={16}/></button><button className="vehicle-gallery__arrow is-left" onClick={()=>next(-1)} aria-label="Previous image"><ChevronLeft/></button><button className="vehicle-gallery__arrow is-right" onClick={()=>next(1)} aria-label="Next image"><ChevronRight/></button></>}
     </div>
-    {images.length>1&&<div className="vehicle-gallery__thumbs">{images.map((pic,i)=><button type="button" key={pic.id} className={i===index?'is-selected':''} aria-label={'Show photo '+(i+1)} aria-pressed={i===index} onClick={()=>setIndex(i)}><PreviewPhoto src={pic.url} alt={pic.alt_text??'Vehicle photo '+(i+1)}/></button>)}</div>}
+    {images.length>1&&<div className="vehicle-gallery__thumbs">{images.map((pic,i)=><button type="button" key={pic.id} className={i===index?'is-selected':''} aria-label={'Show photo '+(i+1)} aria-pressed={i===index} onClick={()=>setIndex(i)}><PreviewPhoto src={pic.thumbnail_url||pic.url} alt={pic.alt_text??'Vehicle photo '+(i+1)}/></button>)}</div>}
    </div>
    <div className="detail-panels"><section className="detail-panel"><span className="eyebrow eyebrow--red">OVERVIEW</span><h2>About this vehicle</h2><p>{vehicle.description||'Contact Carfolk for a full vehicle description, inspection details and specifications.'}</p></section>
     <section className="detail-panel"><span className="eyebrow eyebrow--red">SPECIFICATIONS</span><h2>Vehicle details</h2><div className="detail-spec-grid">{specs.map(([label,value])=><div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div></section>
