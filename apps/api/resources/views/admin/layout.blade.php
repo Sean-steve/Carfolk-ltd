@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#101622">
 <title>@yield('title','Dealership Administration') | Carfolk LTD</title>
 <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
-<link rel="stylesheet" href="{{ asset('css/admin-experience.css') }}?v=o7-3">
+<link rel="stylesheet" href="{{ asset('css/admin-experience.css') }}?v=o7-4">
 @stack('styles')
 </head>
 <body>
@@ -40,5 +40,6 @@
 <script src="{{ asset('js/admin-errors.js') }}" defer></script>
 <script src="{{ asset('js/admin-image-optimizer.js') }}?v=o7-3" defer></script>
 <script src="{{ asset('js/admin-bulk-photos.js') }}?v=o7-3" defer></script>
+<script src="{{ asset('js/admin-photo-gallery.js') }}?v=o7-4" defer></script>
 </body>
 </html>
