@@ -6,6 +6,7 @@ use App\Models\VehicleImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PhotoManager {
  public static function add(Vehicle $vehicle, UploadedFile $photo, ?string $alt=null): VehicleImage {
@@ -23,7 +24,7 @@ class PhotoManager {
    if(count($photos)<1 || count($photos)>5)abort(422,'Choose between 1 and 5 photos per upload.');
    $paths=[];
    try {
-     return DB::transaction(function () use ($vehicle,$photos,$alt,$clientBatchId,&$paths) {
+     $added = DB::transaction(function () use ($vehicle,$photos,$alt,$clientBatchId,&$paths) {
        $locked=Vehicle::whereKey($vehicle->id)->lockForUpdate()->firstOrFail();
        abort_if($locked->archived_at,404);
        // A retried request must not create duplicate images, even if the first
@@ -69,6 +70,18 @@ class PhotoManager {
      foreach($paths as $path)Storage::disk('public')->delete($path);
      throw $e;
    }
+   // Never allow a derivative encoding failure to roll back a successful
+   // upload or remove originals after the database transaction commits.
+   foreach ($added as $image) {
+     try {
+       VehicleImageVariants::generate($image);
+     } catch (\Throwable $e) {
+       Log::warning('Vehicle photo uploaded, but responsive variants are pending', [
+         'image_id' => $image->id, 'exception' => $e->getMessage(),
+       ]);
+     }
+   }
+   return $added;
  }
  public static function remove(Vehicle $vehicle,VehicleImage $image): void {
     abort_unless($image->vehicle_id===$vehicle->id,404);
@@ -79,5 +92,6 @@ class PhotoManager {
        AuditEvent::record('vehicle.photo_removed',$vehicle,['image_id'=>$image->id]);
     });
     Storage::disk($image->disk)->delete($image->path);
+    VehicleImageVariants::deleteForPath($image->disk,$image->path);
  }
 }
