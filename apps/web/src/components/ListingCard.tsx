@@ -7,9 +7,10 @@ import {useCompare} from '../state/CompareContext';
 export function ListingCard({car,onLimit}:{car:Vehicle;onLimit:()=>void}){
  const {selected,toggleCompare}=useCompare();
  const active=selected.includes(car.id);
+ const cover=car.images.find(image=>image.is_primary)??car.images[0];
  return <article className="listing-card">
   <div className="listing-card__photo">
-   <a href={toCar(car.slug)} aria-label={'View '+vehicleName(car)}><PreviewPhoto src={car.images[0]?.url??''} alt={car.images[0]?.alt_text||'Photo of '+vehicleName(car)}/></a>
+   <a href={toCar(car.slug)} aria-label={'View '+vehicleName(car)}><PreviewPhoto src={cover?.url??''} alt={cover?.alt_text||'Photo of '+vehicleName(car)}/></a>
    <span className="listing-card__demo">{car.status==='available'?'AVAILABLE':car.status.toUpperCase()}</span>
    {car.condition&&<span className="listing-card__condition">{car.condition}</span>}
   </div>
