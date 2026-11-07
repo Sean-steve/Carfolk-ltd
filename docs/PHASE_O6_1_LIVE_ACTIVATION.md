@@ -78,7 +78,7 @@ Use test photos owned/approved by Carfolk and remove only specifically identifie
 
 ## 4. Monitor/alert setup
 
-Workflow: `.github/workflows/carfolk-live-monitor.yml` (scheduled every 15 minutes + manual dispatch). It performs public read-only checks and creates **one open GitHub Issue** for a sustained public endpoint failure. On recovery it comments and closes the issue. No credentials, request bodies, lead data or logs are sent to public Issues.
+Workflow: `.github/workflows/carfolk-live-monitor.yml` (scheduled every 15 minutes + manual dispatch). It performs public read-only checks, verifies expected HTML/JSON markers to reject misleading SPA fallbacks, and creates **one open GitHub Issue** for a public endpoint failure after two unsuccessful attempts. On recovery it comments and closes the issue. No credentials, request bodies, lead data or logs are sent to public Issues.
 
 Activation requirements:
 - Workflow merged into **default branch main** (schedules only run there).
