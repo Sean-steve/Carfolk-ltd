@@ -8,6 +8,7 @@ use App\Models\VehicleImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -110,6 +111,14 @@ final class VehiclePhotoEditor
         }
         if ($old !== null && !($old['disk'] === 'public' && $old['path'] === $newPath)) {
             Storage::disk($old['disk'])->delete($old['path']);
+            VehicleImageVariants::deleteForPath($old['disk'], $old['path']);
+        }
+        try {
+            VehicleImageVariants::generate($image->fresh());
+        } catch (\Throwable $error) {
+            Log::warning('Replacement vehicle photo responsive variants pending', [
+                'image_id' => $image->id, 'exception' => $error->getMessage(),
+            ]);
         }
     }
 }
