@@ -34,7 +34,7 @@ rollback() {
   echo 'Deploy failed; reverting application files (database/uploads untouched)' >&2
   rsync -a --delete --exclude='/.env*' --exclude='/storage/' --exclude='/bootstrap/cache/' "$BACKUP/api/" "$API/" || true
   [[ -f "$BACKUP/index.html" ]] && cp -p "$BACKUP/index.html" "$PUBLIC/index.html" || true
-  for part in css brand; do
+  for part in css brand js; do
     if [[ -d "$BACKUP/$part" ]]; then
       mkdir -p "$PUBLIC/$part"
       rsync -a "$BACKUP/$part/" "$PUBLIC/$part/" || true
@@ -73,7 +73,7 @@ BACKUP="$STATE/backups/$STAMP-$RELEASE_ID"
 mkdir -p "$BACKUP/api"
 rsync -a --exclude='/.env*' --exclude='/storage/' --exclude='/bootstrap/cache/' "$API/" "$BACKUP/api/"
 cp -p "$PUBLIC/index.html" "$BACKUP/index.html"
-for part in css brand; do
+for part in css brand js; do
   [[ -d "$PUBLIC/$part" ]] && cp -a "$PUBLIC/$part" "$BACKUP/$part"
 done
 
@@ -81,8 +81,11 @@ MUTATED=1
 # Keep live .env, Laravel storage (including vehicle photos), and framework caches.
 rsync -a --delete --exclude='/.env*' --exclude='/storage/' --exclude='/bootstrap/cache/' "$STAGE/api/" "$API/"
 (cd "$API" && php artisan package:discover --ansi && php artisan config:clear && php artisan config:cache && php artisan view:cache)
-for part in css brand; do
-  [[ -d "$API/public/$part" ]] && rsync -a "$API/public/$part/" "$PUBLIC/$part/"
+for part in css brand js; do
+  if [[ -d "$API/public/$part" ]]; then
+    mkdir -p "$PUBLIC/$part"
+    rsync -a "$API/public/$part/" "$PUBLIC/$part/"
+  fi
 done
 # Copy hashed assets first; replace the HTML entry point last.
 rsync -a "$STAGE/web/assets/" "$PUBLIC/assets/"
@@ -92,6 +95,8 @@ rsync -a --exclude='/index.html' --exclude='/assets/' --exclude='/robots.txt' \
   --exclude='/.well-known/' "$STAGE/web/" "$PUBLIC/"
 cp "$STAGE/web/index.html" "$PUBLIC/.carfolk-index.new"
 mv -f "$PUBLIC/.carfolk-index.new" "$PUBLIC/index.html"
+# Confirm the O6 administrative upload guard is served as JavaScript, not SPA HTML.
+curl --fail --silent --show-error --max-time 20 "$ORIGIN/js/admin-errors.js" | grep -q 'data-photo-upload'
 for endpoint in /up /api/v1/site /api/v1/vehicles /manage/login; do
   curl --fail --silent --show-error --max-time 20 --output /dev/null "$ORIGIN$endpoint"
 done

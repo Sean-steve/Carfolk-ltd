@@ -21,6 +21,7 @@
       <a class="{{ request()->routeIs('manage.enquiries*')?'active':'' }}" href="{{ route('manage.enquiries') }}">Customer Enquiries</a>
       <a class="{{ request()->routeIs('manage.viewings*')?'active':'' }}" href="{{ route('manage.viewings') }}">Viewing Requests</a>
       <a class="{{ request()->routeIs('manage.settings*')?'active':'' }}" href="{{ route('manage.settings') }}">Dealership Settings</a>
+      <a class="{{ request()->routeIs('manage.system-health')?'active':'' }}" href="{{ route('manage.system-health') }}">System Health</a>
     </nav>
     <div class="admin-side-footer"><p>Signed in as<br><strong>{{ auth()->user()->name }}</strong></p>
       <form action="{{ route('manage.logout') }}" method="post">@csrf <button type="submit">Sign out →</button></form>
@@ -30,11 +31,12 @@
     <header class="admin-top"><span>CARFOLK LTD / OPERATIONS</span><span class="admin-top-user">{{ auth()->user()->email }}</span></header>
     <main class="admin-main">
       <div class="admin-heading"><div><span class="admin-kicker">@yield('eyebrow','MANAGEMENT')</span><h1>@yield('title','Dashboard')</h1></div><div>@yield('actions')</div></div>
-      @if(session('success'))<div class="flash flash-ok" role="status">{{ session('success') }}</div>@endif
-      @if($errors->any())<div class="flash flash-error" role="alert"><strong>Please correct the following:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+      @if(session('success'))<div class="flash flash-ok" role="status" data-flash><span>{{ session('success') }}</span><button type="button" class="flash-dismiss" data-dismiss-flash aria-label="Dismiss notification">×</button></div>@endif
+      @if($errors->any())<div class="flash flash-error" role="alert" data-flash><div><strong>Please correct the following:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div><button type="button" class="flash-dismiss" data-dismiss-flash aria-label="Dismiss notification">×</button></div>@endif
       @yield('content')
     </main>
   </div>
 </div>
+<script src="{{ asset('js/admin-errors.js') }}" defer></script>
 </body>
 </html>

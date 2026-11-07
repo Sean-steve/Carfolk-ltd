@@ -30,7 +30,25 @@ export type EnquiryPayload={
 };
 export type LeadResponse={id:string;status:'new'|'requested';message:string};
 export class ApiError extends Error {
- constructor(message:string,public readonly status:number,public readonly fieldErrors:Record<string,string[]>={}){super(message);this.name='ApiError'}
+ constructor(
+  message:string,
+  public readonly status:number,
+  public readonly fieldErrors:Record<string,string[]>={},
+  public readonly requestId:string|null=null,
+ ){super(message);this.name='ApiError'}
+}
+/** Stable messages also work when Apache returns an HTML error page. */
+function publicFailure(status:number):string {
+ switch(status){
+  case 413:return 'Your request is too large. Try a smaller upload or fewer photos.';
+  case 422:return 'Please correct the highlighted information.';
+  case 429:return 'Too many requests. Please try again later.';
+  case 503:return 'The dealership service is not currently available.';
+  case 404:return 'This vehicle or page is no longer available.';
+  case 401:return 'Please sign in again to continue.';
+  case 403:return 'You do not have permission to perform this action.';
+  default:return 'The dealership server could not complete your request.';
+ }
 }
 const override=String(import.meta.env.VITE_CARFOLK_API_BASE??'').trim().replace(/\/$/,'');
 const isPagesBuild=import.meta.env.BASE_URL.startsWith('/Carfolk-ltd/');
@@ -52,17 +70,22 @@ async function send<T>(path:string,options:RequestInit={},signal?:AbortSignal):P
   if(e instanceof DOMException&&e.name==='AbortError')throw e;
   throw new ApiError('Unable to connect to the Carfolk dealership server.',0);
  }
+ const headerReference=response.headers?.get('X-Request-ID')??null;
  let body:unknown;
- try{body=await response.json()}catch{throw new ApiError('Unexpected dealership server response.',response.status)}
- if(!response.ok){
-  const value=body as {message?:string;errors?:Record<string,string[]>};
+ try{body=await response.json()}catch{
+  // A web server may return HTML before the request ever reaches Laravel.
   throw new ApiError(
-   response.status===429?'Too many requests. Please try again later.':
-   response.status===503?'The dealership service is not currently available.':
-   response.status===404?'This vehicle is no longer available.':
-   response.status===422?'Please correct the highlighted information.':
-   'The dealership server could not complete your request.',
-   response.status,response.status===422?value?.errors??{}:{},
+   response.ok?'Unexpected dealership server response.':publicFailure(response.status),
+   response.status,{},headerReference,
+  );
+ }
+ if(!response.ok){
+  const value=body as {message?:string;errors?:Record<string,string[]>;error?:{request_id?:string}};
+  const reference=value?.error?.request_id||headerReference;
+  const message=publicFailure(response.status);
+  throw new ApiError(
+   reference&&response.status>=500?message+' Reference: '+reference:message,
+   response.status,response.status===422?value?.errors??{}:{},reference,
   );
  }
  return body as T;

@@ -1,6 +1,7 @@
 <?php
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DiagnosticsController;
 use App\Http\Controllers\Admin\VehicleAdminController;
 use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\SiteAdminController;
@@ -24,6 +25,7 @@ Route::prefix('manage')->name('manage.')->group(function() {
 
     Route::middleware(['auth','admin'])->group(function(){
         Route::get('/',[DashboardController::class,'index'])->name('dashboard');
+        Route::get('/system-health',[DiagnosticsController::class,'index'])->name('system-health');
         Route::post('/logout',[AuthController::class,'logout'])->name('logout');
         Route::get('/vehicles',[VehicleAdminController::class,'index'])->name('vehicles.index');
         Route::get('/vehicles/create',[VehicleAdminController::class,'create'])->name('vehicles.create');
