@@ -157,3 +157,33 @@ test('restored public buyer guidance is coherent across vehicle discovery, compa
  await expect(page.getByText('A viewing request is not an automatic appointment or vehicle reservation.')).toBeVisible();
 });
 
+test('admin selects seven photos once and uploads in safe batches',async({page},testInfo)=>{
+ test.skip(testInfo.project.name==='mobile-chromium','Write-once media test runs on desktop');
+ test.skip(!password,'CI-only admin password required');
+ await page.goto(admin+'/manage/login');
+ await page.locator('#email').fill('cert-admin@example.invalid');
+ await page.locator('#password').fill(password!);
+ await page.getByRole('button',{name:/Sign in to dashboard/i}).click();
+ await expect(page.getByRole('heading',{name:'Dealership Overview'})).toBeVisible();
+ await page.goto(admin+'/manage/vehicles/create');
+ const unique='CI-O72-'+Date.now();
+ await page.locator('input[name="stock_reference"]').fill(unique);
+ await page.locator('input[name="make"]').fill('Mazda');
+ await page.locator('input[name="model"]').fill('Demio');
+ await page.locator('input[name="year"]').fill('2021');
+ await page.locator('input[name="price_kes"]').fill('1120000');
+ await page.getByRole('button',{name:/Create vehicle/i}).click();
+ await expect(page).toHaveURL(/\\/manage\\/vehicles\\/[^/]+\\/edit#vehicle-photos$/);
+ await expect(page.getByText('Select up to 20 photos in one go')).toBeVisible();
+ const pixelPng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7JQxkAAAAASUVORK5CYII=','base64');
+ const photos=Array.from({length:7},(_,i)=>({
+   name:`ci-photo-${i+1}.png`,mimeType:'image/png',buffer:pixelPng
+ }));
+ await page.locator('input[type="file"][name="photos[]"]').setInputFiles(photos);
+ await expect(page.locator('[data-upload-selection]')).toContainText('7 selected');
+ await page.getByRole('button',{name:'Upload selected photos'}).click();
+ await expect(page.locator('.vehicle-image')).toHaveCount(7,{timeout:45000});
+ await expect(page.locator('.vehicle-photo-gallery-title')).toContainText('7 of 20');
+ await expect(page.locator('.vehicle-image .pill-available')).toHaveCount(1);
+ testInfo.annotations.push({type:'evidence',description:'Single seven-photo selection delivered in two JSON batches and visible gallery'});
+});
