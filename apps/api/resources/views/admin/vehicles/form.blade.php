@@ -71,7 +71,7 @@
   <div class="panel-head vehicle-photo-section__head">
    <div><span class="admin-kicker">STEP 2 · LISTING PHOTOGRAPHS</span>
     <h2 id="vehicle-photo-title">Vehicle photos @if($mode==='edit')<small>({{ $vehicle->images->count() }}/20)</small>@endif</h2>
-    <p>Add approved photos of this exact car. Choose the main image, adjust their order and preview the full listing before publishing.</p>
+    <p>Add clear, approved photos of this exact vehicle. Choose the main image, adjust their order and preview the complete listing before publishing.</p>
    </div>
    @if($mode==='edit')<span class="vehicle-photo-section__badge">Photo upload available</span>
    @else<span class="vehicle-photo-section__badge vehicle-photo-section__badge--pending">Save details to enable</span>@endif
