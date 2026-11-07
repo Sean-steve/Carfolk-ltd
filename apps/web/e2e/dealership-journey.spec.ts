@@ -144,18 +144,51 @@ test('authenticated Carfolk command center is usable on desktop and mobile',asyn
   await page.locator('input[name="price_kes"]').fill('1120000');
   await page.getByRole('button',{name:/Create vehicle/i}).click();
   await expect(page).toHaveURL(/edit#vehicle-photos$/);
-  await expect(page.getByText('Select up to 20 photos in one go')).toBeVisible();
+  await expect(page.getByText('Select photos — Carfolk will optimize them automatically')).toBeVisible();
   const pixelPng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7JQxkAAAAASUVORK5CYII=','base64');
   const photos=Array.from({length:20},(_,index)=>({
    name:`ci-photo-${index+1}.png`,mimeType:'image/png',buffer:pixelPng
   }));
   await page.locator('input[type="file"][name="photos[]"]').setInputFiles(photos);
   await expect(page.locator('[data-upload-selection]')).toContainText('20 selected');
+  await expect(page.locator('[data-optimization-status]')).toContainText('20 photos ready');
+  await expect(page.locator('[data-optimized-previews] .bulk-photo-preview')).toHaveCount(20);
   await page.getByRole('button',{name:'Upload selected photos'}).click();
   await expect(page.locator('.vehicle-image')).toHaveCount(20,{timeout:45000});
   await expect(page.locator('.vehicle-photo-gallery-title')).toContainText('20 of 20');
   await expect(page.locator('.vehicle-image .pill-available')).toHaveCount(1);
   testInfo.annotations.push({type:'evidence',description:'One selection of 20 photos uploaded via four authenticated JSON batches'});
+  const reduction=await page.evaluate(async()=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=2800;
+    canvas.height=2200;
+    const context=canvas.getContext('2d');
+    if(!context) throw Error('canvas unavailable');
+    const image=context.createImageData(canvas.width,canvas.height);
+    let seed=142857;
+    for(let i=0;i<image.data.length;i+=4){
+      seed=(1664525*seed+1013904223)>>>0;
+      image.data[i]=seed&255;
+      image.data[i+1]=(seed>>>8)&255;
+      image.data[i+2]=(seed>>>16)&255;
+      image.data[i+3]=255;
+    }
+    context.putImageData(image,0,0);
+    const source=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('PNG encoding failed')),'image/png'));
+    canvas.width=0; canvas.height=0;
+    const file=new File([source],'oversized-car-photo.png',{type:'image/png'});
+    const result=await (window as any).CarfolkImageOptimizer.optimize(file,{maxBytes:8*1024*1024});
+    return {before:file.size,after:result.file.size,type:result.file.type,
+      dimensions:result.dimensions,optimized:result.optimized,
+      supported:Array.isArray([result.file.name,result.file.type])};
+  });
+  expect(reduction.before).toBeGreaterThan(8*1024*1024);
+  expect(reduction.after).toBeLessThan(8*1024*1024);
+  expect(reduction.after).toBeLessThan(reduction.before);
+  expect(reduction.optimized).toBeTruthy();
+  expect(reduction.type).toBe('image/webp');
+  expect(Math.max(reduction.dimensions.width,reduction.dimensions.height)).toBeLessThanOrEqual(2560);
+  testInfo.annotations.push({type:'evidence',description:'High-resolution PNG >8 MiB compressed locally into WebP <8 MiB before any upload'});
  }
  testInfo.annotations.push({type:'evidence',description:'Carfolk authenticated operational overview and navigation certified on '+testInfo.project.name});
 });
