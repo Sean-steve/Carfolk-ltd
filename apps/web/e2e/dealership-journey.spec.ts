@@ -133,6 +133,30 @@ test('authenticated Carfolk command center is usable on desktop and mobile',asyn
  await expect(page.getByText(/Key details configured/)).toBeVisible();
  const adminOverflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
  expect(adminOverflow).toBeLessThanOrEqual(2);
+ if(testInfo.project.name==='desktop-chromium') {
+  // Reuse the admin session from this test to respect the 5/minute login throttle.
+  await page.goto(admin+'/manage/vehicles/create');
+  const unique='CI-O72-'+Date.now();
+  await page.locator('input[name="stock_reference"]').fill(unique);
+  await page.locator('input[name="make"]').fill('Mazda');
+  await page.locator('input[name="model"]').fill('Demio');
+  await page.locator('input[name="year"]').fill('2021');
+  await page.locator('input[name="price_kes"]').fill('1120000');
+  await page.getByRole('button',{name:/Create vehicle/i}).click();
+  await expect(page).toHaveURL(/edit#vehicle-photos$/);
+  await expect(page.getByText('Select up to 20 photos in one go')).toBeVisible();
+  const pixelPng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7JQxkAAAAASUVORK5CYII=','base64');
+  const photos=Array.from({length:7},(_,index)=>({
+   name:`ci-photo-${index+1}.png`,mimeType:'image/png',buffer:pixelPng
+  }));
+  await page.locator('input[type="file"][name="photos[]"]').setInputFiles(photos);
+  await expect(page.locator('[data-upload-selection]')).toContainText('7 selected');
+  await page.getByRole('button',{name:'Upload selected photos'}).click();
+  await expect(page.locator('.vehicle-image')).toHaveCount(7,{timeout:45000});
+  await expect(page.locator('.vehicle-photo-gallery-title')).toContainText('7 of 20');
+  await expect(page.locator('.vehicle-image .pill-available')).toHaveCount(1);
+  testInfo.annotations.push({type:'evidence',description:'One selection of 7 photos uploaded via two authenticated JSON batches'});
+ }
  testInfo.annotations.push({type:'evidence',description:'Carfolk authenticated operational overview and navigation certified on '+testInfo.project.name});
 });
 
@@ -155,35 +179,4 @@ test('restored public buyer guidance is coherent across vehicle discovery, compa
  await page.goto('/#/contact?intent=test-drive&vehicle=ci-toyota-rav4');
  await expect(page.getByRole('heading',{name:'Plan your visit with confidence.'})).toBeVisible();
  await expect(page.getByText('A viewing request is not an automatic appointment or vehicle reservation.')).toBeVisible();
-});
-
-test('admin selects seven photos once and uploads in safe batches',async({page},testInfo)=>{
- test.skip(testInfo.project.name==='mobile-chromium','Write-once media test runs on desktop');
- test.skip(!password,'CI-only admin password required');
- await page.goto(admin+'/manage/login');
- await page.locator('#email').fill('cert-admin@example.invalid');
- await page.locator('#password').fill(password!);
- await page.getByRole('button',{name:/Sign in to dashboard/i}).click();
- await expect(page.getByRole('heading',{name:'Dealership Overview'})).toBeVisible();
- await page.goto(admin+'/manage/vehicles/create');
- const unique='CI-O72-'+Date.now();
- await page.locator('input[name="stock_reference"]').fill(unique);
- await page.locator('input[name="make"]').fill('Mazda');
- await page.locator('input[name="model"]').fill('Demio');
- await page.locator('input[name="year"]').fill('2021');
- await page.locator('input[name="price_kes"]').fill('1120000');
- await page.getByRole('button',{name:/Create vehicle/i}).click();
- await expect(page).toHaveURL(/edit#vehicle-photos$/);
- await expect(page.getByText('Select up to 20 photos in one go')).toBeVisible();
- const pixelPng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7JQxkAAAAASUVORK5CYII=','base64');
- const photos=Array.from({length:7},(_,i)=>({
-   name:`ci-photo-${i+1}.png`,mimeType:'image/png',buffer:pixelPng
- }));
- await page.locator('input[type="file"][name="photos[]"]').setInputFiles(photos);
- await expect(page.locator('[data-upload-selection]')).toContainText('7 selected');
- await page.getByRole('button',{name:'Upload selected photos'}).click();
- await expect(page.locator('.vehicle-image')).toHaveCount(7,{timeout:45000});
- await expect(page.locator('.vehicle-photo-gallery-title')).toContainText('7 of 20');
- await expect(page.locator('.vehicle-image .pill-available')).toHaveCount(1);
- testInfo.annotations.push({type:'evidence',description:'Single seven-photo selection delivered in two JSON batches and visible gallery'});
 });
