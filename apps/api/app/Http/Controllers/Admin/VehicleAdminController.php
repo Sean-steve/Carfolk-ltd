@@ -6,6 +6,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Support\VehicleData;
 use App\Support\PhotoManager;
+use App\Support\VehiclePhotoEditor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\File;
@@ -95,6 +96,37 @@ class VehicleAdminController extends Controller {
  public function removePhoto(Vehicle $vehicle,VehicleImage $image) {
     PhotoManager::remove($vehicle,$image);
     return back()->with('success','Photo removed.');
+ }
+ public function preview(Vehicle $vehicle) {
+    abort_if($vehicle->archived_at,404);
+    $vehicle->load('images');
+    return response()->view('admin.vehicles.preview', ['vehicle'=>$vehicle])
+        ->header('Cache-Control','private, no-store, max-age=0')
+        ->header('X-Robots-Tag','noindex, nofollow, noarchive');
+ }
+ public function primaryPhoto(Vehicle $vehicle,VehicleImage $image) {
+    VehiclePhotoEditor::primary($vehicle,$image);
+    return redirect()->to(route('manage.vehicles.edit',$vehicle).'#vehicle-photos')->with('success','Primary vehicle photo updated.');
+ }
+ public function orderPhotos(Request $request,Vehicle $vehicle) {
+    $data=$request->validate(['order'=>['required','array','min:1','max:20'],'order.*'=>['required','uuid','distinct']]);
+    VehiclePhotoEditor::reorder($vehicle,$data['order']);
+    return redirect()->to(route('manage.vehicles.edit',$vehicle).'#vehicle-photos')->with('success','Photo display order updated.');
+ }
+ public function movePhoto(Request $request,Vehicle $vehicle,VehicleImage $image) {
+    $data=$request->validate(['direction'=>['required','in:up,down']]);
+    VehiclePhotoEditor::move($vehicle,$image,$data['direction']);
+    return redirect()->to(route('manage.vehicles.edit',$vehicle).'#vehicle-photos')->with('success','Photo moved.');
+ }
+ public function captionPhoto(Request $request,Vehicle $vehicle,VehicleImage $image) {
+    $data=$request->validate(['alt_text'=>['nullable','string','max:200']]);
+    VehiclePhotoEditor::updateAlt($vehicle,$image,$data['alt_text']??null);
+    return redirect()->to(route('manage.vehicles.edit',$vehicle).'#vehicle-photos')->with('success','Photo description updated.');
+ }
+ public function replacePhoto(Request $request,Vehicle $vehicle,VehicleImage $image) {
+    $data=$request->validate(['photo'=>['required',File::types(['jpg','jpeg','png','webp'])->max('8mb')]]);
+    VehiclePhotoEditor::replace($vehicle,$image,$data['photo']);
+    return redirect()->to(route('manage.vehicles.edit',$vehicle).'#vehicle-photos')->with('success','Vehicle photo replaced; its position and primary setting were preserved.');
  }
  private function payload(VehicleRequest $request): array {
     return array_merge($request->validated(),[
