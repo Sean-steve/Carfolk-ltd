@@ -40,3 +40,39 @@
 @media(max-width:1100px){.experience-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:670px){.experience-panel{padding:18px}.experience-stats{gap:9px}.experience-stats>div,.experience-stats>a{padding:14px}.experience-stats strong{font-size:25px}.experience-title-row{align-items:flex-start}.experience-filters{padding:13px}.experience-filters label{flex:1 1 100%}.experience-filters .btn{flex:1 1 135px}.experience-inline-filter{width:100%}.experience-inline-filter label{flex:1}.experience-inline-filter select{min-width:0}.experience-status-form{min-width:175px}}
 @media(max-width:410px){.experience-stats{grid-template-columns:1fr 1fr}.experience-stats span{font-size:9px}.experience-stats strong{font-size:22px}.experience-stats--settings{grid-template-columns:1fr}}
+
+/* O7.1 — Photo-first vehicle workflow: visible setup stages and direct photo entry. */
+.vehicle-stepper{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;max-width:1100px;margin:0 0 16px}
+.vehicle-step{display:flex;align-items:center;gap:14px;padding:16px 19px;border:1px solid #d9e1eb;border-radius:12px;background:#fff;color:#293b52;text-decoration:none;min-width:0;box-shadow:0 6px 16px #16203907}
+.vehicle-step strong{display:block;font:800 14px var(--heading);margin-bottom:2px}
+.vehicle-step small{display:block;color:#697d90;font:500 12px var(--font)}
+.vehicle-step__number{display:grid;place-items:center;flex:0 0 37px;height:37px;border-radius:50%;background:#e9edf3;color:#394b60;font:800 15px var(--heading)}
+.vehicle-step--active{border-color:#e9a6af;background:#fffafa}
+.vehicle-step--active .vehicle-step__number,.vehicle-step--ready .vehicle-step__number{background:#e21b2d;color:#fff}
+.vehicle-step--ready{border-color:#a8d2bd;background:#f5fcf8}
+.vehicle-step--ready:hover{border-color:#e21b2d;background:#fff9fa}
+.vehicle-step--locked{border-style:dashed;background:#f7f9fc}
+.vehicle-step__arrow{margin-left:auto;color:#bc2032;font-size:21px;font-weight:800}
+.vehicle-photo-callout{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;max-width:1100px;margin-bottom:23px;padding:17px 20px;border-radius:11px;background:#101a29;color:#fff}
+.vehicle-photo-callout strong{font:800 14px var(--heading)}
+.vehicle-photo-callout p{margin:4px 0 0;color:#ccd6e1;font-size:12px;max-width:650px}
+.vehicle-photo-callout .btn{flex-shrink:0}
+.vehicle-photo-callout__status{padding:7px 11px;border:1px solid #657386;border-radius:7px;font:800 11px var(--heading);color:#dee7f0}
+.vehicle-photo-section{scroll-margin-top:24px;border-top:3px solid #e21b2d}
+.vehicle-photo-section:focus{outline:none}
+.vehicle-photo-section:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.vehicle-photo-section__head{display:flex;justify-content:space-between;align-items:start;gap:14px;flex-wrap:wrap}
+.vehicle-photo-section__head h2 small,.vehicle-photo-gallery-title small{color:#728298;font:600 13px var(--font)}
+.vehicle-photo-section__badge{display:inline-flex;border-radius:999px;padding:6px 11px;background:#e7f8ee;color:#136c42;font:800 11px var(--heading)}
+.vehicle-photo-section__badge--pending{background:#f0f3f7;color:#65758a}
+.vehicle-photo-instructions{margin-bottom:14px}
+.vehicle-photo-instructions strong{font:800 14px var(--heading)}
+.vehicle-photo-instructions p{margin:3px 0;color:#64758c;font-size:12px}
+.vehicle-photo-section .photo-upload{padding:19px;border:1px dashed #acb9cb;border-radius:11px;background:#f7f9fc;margin-bottom:29px}
+.vehicle-photo-section .photo-upload input[type=file]{min-height:48px;height:auto}
+.vehicle-photo-gallery-title{font-size:16px;margin:14px 0}
+.vehicle-photo-locked{background:#f7f9fc;border:1px dashed #c2ccda;padding:22px;border-radius:10px}
+.vehicle-photo-locked strong{font:800 15px var(--heading)}
+.vehicle-photo-locked p{margin:8px 0 17px!important}
+.vehicle-photo-quick-link{color:#a01427!important}
+@media(max-width:700px){.vehicle-stepper{grid-template-columns:minmax(0,1fr)}.vehicle-photo-callout{align-items:flex-start}.vehicle-photo-callout .btn{width:100%}}
