@@ -157,7 +157,15 @@ test('authenticated Carfolk command center is usable on desktop and mobile',asyn
   await expect(page.locator('.vehicle-image')).toHaveCount(20,{timeout:45000});
   await expect(page.locator('.vehicle-photo-gallery-title')).toContainText('20 of 20');
   await expect(page.locator('.vehicle-image .pill-available')).toHaveCount(1);
-  testInfo.annotations.push({type:'evidence',description:'One selection of 20 photos uploaded via four authenticated JSON batches'});
+  await expect(page.getByRole('button',{name:'Set as main photo'}).first()).toBeVisible();
+  await page.getByRole('button',{name:'Set as main photo'}).first().click();
+  await expect(page.locator('.vehicle-image__primary')).toHaveCount(1);
+  await page.getByRole('link',{name:/Preview complete listing/i}).click();
+  await expect(page.getByRole('heading',{name:/Vehicle Listing Preview/i})).toBeVisible();
+  await expect(page.getByText(/Private listing preview/i)).toBeVisible();
+  await expect(page.getByRole('button',{name:/Request a viewing.*Preview only/i})).toBeDisabled();
+  await expect(page.locator('.buyer-preview__thumb')).toHaveCount(20);
+  testInfo.annotations.push({type:'evidence',description:'Full photo selection, alternate primary, protected draft preview and disabled buyer CTAs certified'});
   const reduction=await page.evaluate(async()=>{
     const canvas=document.createElement('canvas');
     canvas.width=2800;
