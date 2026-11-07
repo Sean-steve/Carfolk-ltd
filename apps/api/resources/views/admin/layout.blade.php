@@ -38,7 +38,7 @@
   </div>
 </div>
 <script src="{{ asset('js/admin-errors.js') }}" defer></script>
-<script src="{{ asset('js/admin-image-optimizer.js') }}" defer></script>
-<script src="{{ asset('js/admin-bulk-photos.js') }}" defer></script>
+<script src="{{ asset('js/admin-image-optimizer.js') }}?v=o7-3" defer></script>
+<script src="{{ asset('js/admin-bulk-photos.js') }}?v=o7-3" defer></script>
 </body>
 </html>
