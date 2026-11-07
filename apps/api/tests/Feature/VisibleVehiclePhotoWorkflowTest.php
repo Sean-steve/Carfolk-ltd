@@ -54,7 +54,7 @@ final class VisibleVehiclePhotoWorkflowTest extends TestCase
         // The photo selector appears before the gallery, not after a long image list.
         $content = $page->getContent();
         $this->assertLessThan(
-            strpos($content, 'class="vehicle-images"'),
+            strpos($content, 'class="vehicle-images vehicle-images--manage"'),
             strpos($content, 'data-photo-upload')
         );
     }
