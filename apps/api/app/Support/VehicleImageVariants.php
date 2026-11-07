@@ -127,6 +127,10 @@ final class VehicleImageVariants
                         continue;
                     }
                     $disk->makeDirectory(dirname($targetPath));
+                    // CLI backfills may inherit cPanel's private umask 077.
+                    // Explicitly make only this new PUBLIC derivative folder
+                    // traversable by LiteSpeed; never chmod the private API root.
+                    @chmod($disk->path(dirname($targetPath)), 0755);
                     $destination = $disk->path($targetPath);
                     $temporary = $destination.'.'.bin2hex(random_bytes(4)).'.tmp';
                     try {
