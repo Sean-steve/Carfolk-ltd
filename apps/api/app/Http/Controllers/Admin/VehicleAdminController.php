@@ -44,7 +44,9 @@ class VehicleAdminController extends Controller {
  public function create() {return view('admin.vehicles.form',['vehicle'=>new Vehicle(),'mode'=>'create']);}
  public function store(VehicleRequest $request) {
     $vehicle=DB::transaction(fn()=>VehicleData::create($this->payload($request)));
-    return redirect()->route('manage.vehicles.edit',$vehicle)->with('success','Vehicle created as '.($vehicle->is_published?'published':'draft').'.');
+    // The next step is photo upload, not a return to the top of a long details form.
+    return redirect()->to(route('manage.vehicles.edit',$vehicle).'#vehicle-photos')
+        ->with('success','Vehicle created as '.($vehicle->is_published?'published':'draft').'. Next: add vehicle photos.');
  }
  public function edit(Vehicle $vehicle) {
     abort_if($vehicle->archived_at,404);
