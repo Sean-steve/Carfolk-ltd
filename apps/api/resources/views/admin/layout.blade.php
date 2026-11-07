@@ -21,6 +21,7 @@
       <a class="{{ request()->routeIs('manage.enquiries*')?'active':'' }}" href="{{ route('manage.enquiries') }}">Customer Enquiries</a>
       <a class="{{ request()->routeIs('manage.viewings*')?'active':'' }}" href="{{ route('manage.viewings') }}">Viewing Requests</a>
       <a class="{{ request()->routeIs('manage.settings*')?'active':'' }}" href="{{ route('manage.settings') }}">Dealership Settings</a>
+      <a class="{{ request()->routeIs('manage.system-health')?'active':'' }}" href="{{ route('manage.system-health') }}">System Health</a>
     </nav>
     <div class="admin-side-footer"><p>Signed in as<br><strong>{{ auth()->user()->name }}</strong></p>
       <form action="{{ route('manage.logout') }}" method="post">@csrf <button type="submit">Sign out →</button></form>
