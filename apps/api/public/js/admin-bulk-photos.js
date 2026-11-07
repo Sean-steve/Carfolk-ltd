@@ -14,7 +14,10 @@
   const progressText = form.querySelector('[data-bulk-progress-text]');
   const retry = form.querySelector('[data-bulk-retry]');
   const csrf = form.querySelector('input[name="_token"]');
-  if (![input, submit, error, selection, status, progress, progressText, retry, csrf].every(Boolean)) return;
+  const optimizationStatus = form.querySelector('[data-optimization-status]');
+  const previews = form.querySelector('[data-optimized-previews]');
+  const optimizer = window.CarfolkImageOptimizer;
+  if (![input, submit, error, selection, status, progress, progressText, retry, csrf, optimizationStatus, previews].every(Boolean)) return;
 
   const MiB = 1024 * 1024;
   const maxPerVehicle = 20;
@@ -28,7 +31,9 @@
   const configuredFileLimit = parseBytes(form.dataset.serverFileLimit);
   const configuredPostLimit = parseBytes(form.dataset.serverPostLimit);
   const fileLimit = Number.isFinite(configuredFileLimit) ? Math.min(8 * MiB, configuredFileLimit) : 8 * MiB;
-  const postLimit = configuredPostLimit === 0 ? Infinity : configuredPostLimit - overhead;
+  const postLimit = Number.isFinite(configuredPostLimit)
+    ? (configuredPostLimit === 0 ? Infinity : Math.max(0, configuredPostLimit - overhead))
+    : 8 * MiB; // Conservative fallback when PHP does not report its limit.
   const existing = Math.max(0, Math.min(maxPerVehicle, Number(form.dataset.existingPhotos) || 0));
   const remainingSlots = maxPerVehicle - existing;
   const allowed = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -37,6 +42,10 @@
   let completed = 0;
   let busy = false;
   let started = false;
+  let preparing = false;
+  let prepared = [];
+  let selectionGeneration = 0;
+  let previewUrls = [];
 
   const newBatchId = () => {
     if (typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
@@ -71,7 +80,7 @@
     for (const file of files) {
       if (!isImage(file)) throw new Error('Only JPEG, PNG and WebP photos are supported.');
       if (!file.size || file.size > fileLimit) {
-        throw new Error(`Each photo must be nonempty and no larger than ${(fileLimit / MiB).toFixed(1)} MB. Automatic compression is planned for the next phase.`);
+        throw new Error(`This photo could not be brought under the ${(fileLimit / MiB).toFixed(1)} MB server limit. Please reduce it manually.`);
       }
       if (!(postLimit > file.size)) {
         throw new Error('A selected photo exceeds the PHP request limit including multipart overhead. Reduce its size or increase the host limit.');
@@ -96,14 +105,92 @@
       ? `${count} selected · ${remainingSlots} available slots · up to ${maxPerRequest} photos per request automatically`
       : `Select up to ${remainingSlots} photos at once; Carfolk will upload them in small batches.`;
   };
-  input.addEventListener('change', () => {
+
+  const clearPreviews = () => {
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+    previewUrls = [];
+    previews.replaceChildren();
+    previews.hidden = true;
+  };
+
+  const renderPreview = (originalFile, result) => {
+    const card = document.createElement('div');
+    card.className = 'bulk-photo-preview';
+    const picture = document.createElement('img');
+    const url = URL.createObjectURL(result.file);
+    previewUrls.push(url);
+    picture.src = url;
+    picture.alt = `Optimized upload preview for ${originalFile.name}`;
+    picture.loading = 'lazy';
+    const details = document.createElement('div');
+    details.className = 'bulk-photo-preview__details';
+    const title = document.createElement('strong');
+    title.textContent = originalFile.name;
+    const info = document.createElement('span');
+    const size = bytes => (bytes / MiB).toFixed(2) + ' MB';
+    const resolution = result.dimensions ? ` · ${result.dimensions.width} × ${result.dimensions.height}px` : '';
+    info.textContent = result.optimized
+      ? `${size(result.originalBytes)} → ${size(result.outputBytes)}${resolution}`
+      : `${size(result.outputBytes)} · Original kept`;
+    details.append(title, info);
+    card.append(picture, details);
+    previews.append(card);
+    previews.hidden = false;
+  };
+
+  const prepareSelection = async () => {
+    if (started || busy) return;
+    const generation = ++selectionGeneration;
+    prepared = [];
+    clearPreviews();
     clearError();
     showSelection();
-  });
+    const files = [...input.files];
+    if (!files.length) {
+      preparing = false;
+      submit.disabled = false;
+      optimizationStatus.hidden = true;
+      return;
+    }
+    preparing = true;
+    submit.disabled = true;
+    optimizationStatus.hidden = false;
+    try {
+      if (files.length > maxPerVehicle || files.length > remainingSlots) {
+        throw new Error(`Select no more than ${remainingSlots} photo${remainingSlots === 1 ? '' : 's'} for this vehicle.`);
+      }
+      for (const [index, original] of files.entries()) {
+        if (!isImage(original)) throw new Error('Only JPEG, PNG and WebP photos are supported.');
+        optimizationStatus.textContent = `Preparing photo ${index + 1} of ${files.length}…`;
+        const result = optimizer
+          ? await optimizer.optimize(original, { maxBytes: fileLimit })
+          : { file: original, originalBytes: original.size, outputBytes: original.size, optimized: false, dimensions: null };
+        if (generation !== selectionGeneration) return; // Selection changed while encoding.
+        prepared.push(result.file);
+        renderPreview(original, result);
+      }
+      planBatches(prepared);
+      if (generation !== selectionGeneration) return;
+      const originalBytes = files.reduce((total, file) => total + file.size, 0);
+      const resultBytes = prepared.reduce((total, file) => total + file.size, 0);
+      const savedPercent = originalBytes > 0 ? Math.max(0, Math.round(100 * (1 - resultBytes / originalBytes))) : 0;
+      optimizationStatus.textContent = `${files.length} photos ready · ${savedPercent}% less data · Preview below, then upload.`;
+      submit.disabled = false;
+    } catch (exception) {
+      if (generation !== selectionGeneration) return;
+      prepared = [];
+      optimizationStatus.textContent = 'Photo preparation failed. No images were uploaded.';
+      displayError(exception.message || 'One of the selected photos could not be prepared.');
+    } finally {
+      if (generation === selectionGeneration) preparing = false;
+    }
+  };
+  input.addEventListener('change', () => { void prepareSelection(); });
   if (remainingSlots === 0) {
     input.disabled = true;
     submit.disabled = true;
     selection.textContent = 'This vehicle already has 20 photos. Remove one before uploading more.';
+    optimizationStatus.hidden = true;
     return;
   }
   showSelection();
@@ -182,9 +269,13 @@
     event.preventDefault();
     if (started || busy) return;
     clearError();
-    const files = [...input.files];
+    if (preparing) {
+      displayError('Photo optimization is still running. Upload will be available when previews are ready.');
+      return;
+    }
     try {
-      batches = planBatches(files);
+      if (!prepared.length) throw new Error('Choose photos and review the optimized previews first.');
+      batches = planBatches(prepared);
     } catch (exception) {
       displayError(exception.message);
       return;
@@ -195,8 +286,10 @@
   });
   retry.addEventListener('click', run);
   window.addEventListener('beforeunload', event => {
-    if (!busy) return;
-    event.preventDefault();
-    event.returnValue = '';
+    if (busy) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+    if (!busy) clearPreviews();
   });
 })();
