@@ -104,7 +104,8 @@
         return { file, originalBytes: file.size, outputBytes: file.size, optimized: false, dimensions: { width, height } };
       }
       const baseName = (file.name || 'vehicle-photo').replace(/\.[^.]+$/, '');
-      const output = new File([best], baseName + '.webp', { type: best.type, lastModified: Date.now() });
+      const extension = best.type === 'image/webp' ? 'webp' : best.type === 'image/png' ? 'png' : 'jpg';
+      const output = new File([best], baseName + '.' + extension, { type: best.type, lastModified: Date.now() });
       return {
         file: output,
         originalBytes: file.size,
