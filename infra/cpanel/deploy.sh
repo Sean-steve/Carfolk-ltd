@@ -37,27 +37,33 @@ cleanup() { rm -rf -- "$STAGE"; }
 # Never use this against an arbitrary directory: destination must be $API.
 sync_api_code() {
   local source="$1" destination="$2" entry filename child
-  [[ "$destination" == "$API" && -d "$source" && -d "$destination" && -f "$destination/.env" ]] || {
+  [[ "$destination" == "$API" && -d "$source" && -d "$destination" && ! -L "$destination" && -f "$destination/.env" ]] || {
     echo 'API sync refused: unexpected target or missing runtime .env' >&2
     return 1
   }
-  while IFS= read -r -d '' entry; do
-    filename="${entry##*/}"
-    case "$filename" in
-      .env*|storage) continue ;;
-      bootstrap)
-        if [[ -d "$entry" && ! -L "$entry" ]]; then
-          while IFS= read -r -d '' child; do
-            [[ "${child##*/}" == cache ]] || rm -rf -- "$child"
-          done < <(find "$entry" -mindepth 1 -maxdepth 1 -print0)
-        else
-          echo 'API sync refused: unexpected bootstrap directory type' >&2
-          return 1
-        fi
-        continue ;;
-    esac
-    rm -rf -- "$entry"
-  done < <(find "$destination" -mindepth 1 -maxdepth 1 -print0)
+  # cPanel jailed shells can lack /dev/fd, even when Bash process substitution
+  # works on CI. Enumerate names with dotglob/nullglob in an isolated subshell.
+  # This includes hidden managed files and safely handles spaces in filenames.
+  (
+    shopt -s dotglob nullglob
+    for entry in "$destination"/*; do
+      filename="${entry##*/}"
+      case "$filename" in
+        .env*|storage) continue ;;
+        bootstrap)
+          if [[ -d "$entry" && ! -L "$entry" ]]; then
+            for child in "$entry"/*; do
+              [[ "${child##*/}" == cache ]] || rm -rf -- "$child"
+            done
+          else
+            echo 'API sync refused: unexpected bootstrap directory type' >&2
+            exit 1
+          fi
+          continue ;;
+      esac
+      rm -rf -- "$entry"
+    done
+  )
   # Preserve runtime directories and never extract files from old live storage.
   (cd "$source" && tar --exclude='./.env*' --exclude='./storage' --exclude='./bootstrap/cache' -cf - .) \
     | (cd "$destination" && tar -xf -)
