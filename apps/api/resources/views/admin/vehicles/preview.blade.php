@@ -43,7 +43,7 @@
   <div class="buyer-preview__gallery">
    <div class="buyer-preview__cover">
     @if($cover)
-     <img src="{{ \Illuminate\Support\Facades\Storage::disk($cover->disk)->url($cover->path) }}" alt="{{ $cover->alt_text??($vehicle->make.' '.$vehicle->model.' main photograph') }}">
+     <img src="{{ \App\Support\VehicleImageVariants::urlFor($cover,'detail')??\Illuminate\Support\Facades\Storage::disk($cover->disk)->url($cover->path) }}" alt="{{ $cover->alt_text??($vehicle->make.' '.$vehicle->model.' main photograph') }}">
      <span class="buyer-preview__cover-label">Main photo · 1 of {{ $photos->count() }}</span>
     @else
      <div class="buyer-preview__empty">Photos have not been added yet. Upload approved photographs before publishing.</div>
@@ -53,7 +53,7 @@
     <div class="buyer-preview__thumbs" aria-label="Vehicle gallery, {{ $photos->count() }} photos">
      @foreach($photos as $photo)
       <figure @class(['buyer-preview__thumb','buyer-preview__thumb--main'=>$photo->id===$cover->id])>
-       <img src="{{ \Illuminate\Support\Facades\Storage::disk($photo->disk)->url($photo->path) }}" alt="{{ $photo->alt_text??('Photo '.$loop->iteration.' of '.$vehicle->make.' '.$vehicle->model) }}" loading="lazy">
+       <img src="{{ \App\Support\VehicleImageVariants::urlFor($photo,'thumb')??\Illuminate\Support\Facades\Storage::disk($photo->disk)->url($photo->path) }}" alt="{{ $photo->alt_text??('Photo '.$loop->iteration.' of '.$vehicle->make.' '.$vehicle->model) }}" loading="lazy">
        <figcaption>{{ $loop->iteration }}@if($photo->is_primary) · Main @endif</figcaption>
       </figure>
      @endforeach
