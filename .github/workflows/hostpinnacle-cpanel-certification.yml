@@ -27,6 +27,8 @@ jobs:
           bash -n infra/cpanel/deploy.sh
       - name: Verify portable no-rsync API sync and rollback never touch live runtime data
         run: bash infra/cpanel/test-portable-deploy-sync.sh
+      - name: Verify public asset permissions and protected private paths
+        run: bash infra/cpanel/test-public-permissions.sh
       - name: Check O7 release includes every photo administration bundle
         run: |
           set -euo pipefail
