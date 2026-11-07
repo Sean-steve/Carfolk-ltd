@@ -59,6 +59,8 @@ final class VehicleImageVariantsTest extends TestCase
             $dimensions=getimagesize($disk->path($path));
             $this->assertLessThanOrEqual($maxWidth,max($dimensions[0],$dimensions[1]));
             $this->assertSame(IMAGETYPE_WEBP,$dimensions[2]);
+            $this->assertNotSame(0,fileperms($disk->path($path)) & 0004, 'Public WebP file must be readable by LiteSpeed.');
+            $this->assertNotSame(0,fileperms(dirname($disk->path($path))) & 0001, 'Public variant folder must be traversable.');
             $this->assertNotNull(VehicleImageVariants::urlFor($image,$variant));
         }
         $this->assertSame($originalSize,$disk->size($image->path));
