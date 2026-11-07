@@ -15,15 +15,31 @@ fi
 
 for path in "${paths[@]}"; do
   code='000'
+  valid=0
+  response_file="$(mktemp)"
   for attempt in 1 2; do
-    # Ignore response body; avoid accidentally capturing customer or server internals.
+    # Never print response bodies: even public API content is not needed in Issues.
     code="$(curl --silent --show-error --location --max-redirs 2 --connect-timeout 6 --max-time 15 \
-      --output /dev/null --write-out '%{http_code}' "${origin}${path}" 2>/dev/null || true)"
-    [[ "$code" == '200' ]] && break
+      --output "$response_file" --write-out '%{http_code}' "${origin}${path}" 2>/dev/null || true)"
+    valid=0
+    if [[ "$code" == '200' ]]; then
+      case "$path" in
+        '/') grep -Fq 'id="root"' "$response_file" && valid=1 ;;
+        '/up') ! grep -Fq 'id="root"' "$response_file" && valid=1 ;;
+        '/api/v1/site') jq -e '.data.name | type == "string"' "$response_file" >/dev/null 2>&1 && valid=1 ;;
+        '/manage/login') grep -Fq 'name="password"' "$response_file" && valid=1 ;;
+      esac
+    fi
+    [[ "$valid" == 1 ]] && break
     [[ "$attempt" -lt 2 ]] && sleep 3
   done
-  printf 'GET %s -> %s\n' "$path" "$code"
-  [[ "$code" == '200' ]] || problems+=("${path}: HTTP ${code:-000}")
+  rm -f "$response_file"
+  if [[ "$valid" == 1 ]]; then
+    printf 'GET %s -> healthy\n' "$path"
+  else
+    printf 'GET %s -> unhealthy (HTTP %s)\n' "$path" "$code"
+    problems+=("${path}: HTTP ${code:-000} or unexpected response")
+  fi
 done
 
 # Restrict incident deduplication to this exact sentinel title; avoid issue spam.
@@ -35,7 +51,7 @@ if (( ${#problems[@]} > 0 )); then
   if [[ -z "$existing" ]]; then
     {
       printf '## Automated public endpoint incident\n\n'
-      printf 'A check reported one or more unavailable endpoints. **No customer data was collected.**\n\n'
+      printf 'A check reported one or more unavailable endpoints or invalid application responses. **No customer data was collected.**\n\n'
       for item in "${problems[@]}"; do printf -- '- %s\n' "$item"; done
       printf '\nWorkflow evidence: %s\n' "$run_url"
       printf '\nReview HostPinnacle availability and the private Laravel/server logs. This monitor cannot detect failed authenticated uploads or PHP 413 errors.\n'
