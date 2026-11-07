@@ -38,5 +38,6 @@
   </div>
 </div>
 <script src="{{ asset('js/admin-errors.js') }}" defer></script>
+<script src="{{ asset('js/admin-bulk-photos.js') }}" defer></script>
 </body>
 </html>

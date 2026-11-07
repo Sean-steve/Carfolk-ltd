@@ -19,13 +19,23 @@ class PhotoManager {
   * @param UploadedFile[] $photos
   * @return VehicleImage[]
   */
- public static function addMany(Vehicle $vehicle,array $photos,?string $alt=null): array {
+ public static function addMany(Vehicle $vehicle,array $photos,?string $alt=null,?string $clientBatchId=null): array {
    if(count($photos)<1 || count($photos)>5)abort(422,'Choose between 1 and 5 photos per upload.');
    $paths=[];
    try {
-     return DB::transaction(function () use ($vehicle,$photos,$alt,&$paths) {
+     return DB::transaction(function () use ($vehicle,$photos,$alt,$clientBatchId,&$paths) {
        $locked=Vehicle::whereKey($vehicle->id)->lockForUpdate()->firstOrFail();
        abort_if($locked->archived_at,404);
+       // A retried request must not create duplicate images, even if the first
+       // response was lost after a successful transaction commit.
+       if ($clientBatchId !== null) {
+         $receipt=DB::table('vehicle_photo_upload_batches')
+           ->where('vehicle_id',$locked->id)->where('client_batch_id',$clientBatchId)->first();
+         if ($receipt !== null) {
+           $imageIds=json_decode($receipt->image_ids,true,512,JSON_THROW_ON_ERROR);
+           return $locked->images()->whereIn('id',$imageIds)->orderBy('sort_order')->get()->all();
+         }
+       }
        $existing=$locked->images()->count();
        if($existing+count($photos)>20)abort(422,'Maximum 20 photos per vehicle. Remove an existing photo before adding more.');
        $nextSort=(int)$locked->images()->max('sort_order')+1;
@@ -42,6 +52,15 @@ class PhotoManager {
          ]);
          AuditEvent::record('vehicle.photo_added',$locked,['image_id'=>$image->id]);
          $created[]=$image;
+       }
+       if ($clientBatchId !== null) {
+         DB::table('vehicle_photo_upload_batches')->insert([
+           'vehicle_id'=>$locked->id,
+           'client_batch_id'=>$clientBatchId,
+           'image_ids'=>json_encode(array_map(fn(VehicleImage $image)=>$image->id,$created),JSON_THROW_ON_ERROR),
+           'created_at'=>now(),
+           'updated_at'=>now(),
+         ]);
        }
        return $created;
      });

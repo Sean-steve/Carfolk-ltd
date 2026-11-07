@@ -70,12 +70,26 @@ class VehicleAdminController extends Controller {
       'photos'=>['required','array','min:1','max:5'],
       'photos.*'=>['required',File::types(['jpg','jpeg','png','webp'])->max('8mb')],
       'alt_text'=>['nullable','string','max:200'],
+      'client_batch_id'=>['sometimes','nullable','uuid'],
     ] : [
       'photo'=>['required',File::types(['jpg','jpeg','png','webp'])->max('8mb')],
       'alt_text'=>['nullable','string','max:200'],
+      'client_batch_id'=>['sometimes','nullable','uuid'],
     ]);
     $photos=$multi?$data['photos']:[$data['photo']];
-    $added=PhotoManager::addMany($vehicle,$photos,$data['alt_text']??null);
+    $added=PhotoManager::addMany($vehicle,$photos,$data['alt_text']??null,$data['client_batch_id']??null);
+    // Progressive enhancement: ordinary form posts still redirect; bulk JS
+    // requests opt into JSON so the browser can show progress per batch.
+    if($request->expectsJson()) {
+       $total=$vehicle->images()->count();
+       return response()->json([
+         'ok'=>true,
+         'uploaded'=>count($added),
+         'total'=>$total,
+         'remaining'=>max(0,20-$total),
+         'client_batch_id'=>$data['client_batch_id']??null,
+       ],201)->header('Cache-Control','no-store');
+    }
     return back()->with('success',count($added).' vehicle '.(count($added)===1?'photo':'photos').' uploaded.');
  }
  public function removePhoto(Vehicle $vehicle,VehicleImage $image) {

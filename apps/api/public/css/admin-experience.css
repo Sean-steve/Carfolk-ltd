@@ -76,3 +76,15 @@
 .vehicle-photo-locked p{margin:8px 0 17px!important}
 .vehicle-photo-quick-link{color:#a01427!important}
 @media(max-width:700px){.vehicle-stepper{grid-template-columns:minmax(0,1fr)}.vehicle-photo-callout{align-items:flex-start}.vehicle-photo-callout .btn{width:100%}}
+
+/* O7.2 — progressive 20-photo selection, sequential upload progress and recovery. */
+.bulk-upload-selection{grid-column:1/-1;margin:0!important;color:#40566d;font-size:12px!important}
+.bulk-upload-status{grid-column:1/-1;display:grid;gap:8px;padding:14px 17px;border:1px solid #bacbdd;border-radius:9px;background:#fff}
+.bulk-upload-status[hidden],.bulk-upload-status [hidden]{display:none!important}
+.bulk-upload-status label{font:800 12px var(--heading);color:#24374b}
+.bulk-upload-status progress{width:100%;height:15px;accent-color:#e21b2d}
+.bulk-upload-status p{margin:0!important;color:#3e5469!important;font-size:12px!important}
+.bulk-upload-status button{justify-self:start}
+.photo-upload [data-upload-error]{grid-column:1/-1}
+.photo-upload .btn:disabled{cursor:wait;opacity:.64}
+@media(max-width:700px){.bulk-upload-status button{width:100%}}

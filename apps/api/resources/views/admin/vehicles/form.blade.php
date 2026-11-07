@@ -74,12 +74,20 @@
    @else<span class="vehicle-photo-section__badge vehicle-photo-section__badge--pending">Save details to enable</span>@endif
   </div>
   @if($mode==='edit')
-   <div class="vehicle-photo-instructions"><strong>Upload photographs here</strong><p>Select your photos below, then click <strong>Upload selected photos</strong>. You can come back to add or remove photos anytime.</p></div>
+   <div class="vehicle-photo-instructions"><strong>Select up to 20 photos in one go</strong><p>Carfolk automatically uploads in small batches of up to five files per request, respecting this server's size limits. Your gallery updates when every batch finishes.</p></div>
   <form class="photo-upload" method="post" enctype="multipart/form-data" action="{{ route('manage.vehicles.photos.add',$vehicle) }}" data-photo-upload data-existing-photos="{{ $vehicle->images->count() }}" data-server-file-limit="{{ ini_get('upload_max_filesize') }}" data-server-post-limit="{{ ini_get('post_max_size') }}">@csrf
-   <label>Choose photos (up to 5 JPEG, PNG or WebP; 8 MB each)<input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required></label>
+   <label>Choose photos (up to {{ max(0,20-$vehicle->images->count()) }} remaining; JPEG, PNG or WebP, 8 MB each)<input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required aria-describedby="photo-selection-hint"></label>
    <label>Alternative text<input name="alt_text" maxlength="200" placeholder="e.g. Front view of vehicle"></label>
    <button type="submit" class="btn btn-primary">Upload selected photos</button>
+   <p id="photo-selection-hint" class="bulk-upload-selection" data-upload-selection role="status" aria-live="polite">Select up to {{ max(0,20-$vehicle->images->count()) }} photos at once; uploaded in batches automatically.</p>
+   <div class="bulk-upload-status" data-bulk-status hidden>
+    <label for="bulk-photo-progress">Photo upload progress</label>
+    <progress id="bulk-photo-progress" max="20" value="0" data-bulk-progress></progress>
+    <p role="status" aria-live="polite" data-bulk-progress-text>Preparing photo upload…</p>
+    <button type="button" class="btn btn-outline" data-bulk-retry hidden>Retry remaining photos</button>
+   </div>
    <p class="flash flash-error photo-upload-error" data-upload-error tabindex="-1" role="alert" hidden></p>
+   <noscript><p class="experience-footnote">JavaScript is required to select more than five photos. Without JavaScript, select at most five photos per upload.</p></noscript>
   </form>
 
    <h3 class="vehicle-photo-gallery-title">Uploaded photos <small>({{ $vehicle->images->count() }} of 20)</small></h3>
@@ -90,7 +98,7 @@
    @endforelse
   </div>
 
-   <p class="experience-footnote">Accepted: JPEG, PNG or WebP; up to 5 files per upload, 8 MB each, and 20 photos per vehicle. Only upload images Carfolk is allowed to publish.</p>
+   <p class="experience-footnote">Accepted: JPEG, PNG or WebP, up to 20 photos per vehicle (8 MB each). Select up to all remaining photos at once; Carfolk sends requests in batches of five or fewer. Automatic compression of oversized photos is planned for O7.3. Only upload images Carfolk is allowed to publish.</p>
   @else
    <div class="vehicle-photo-locked">
     <strong>Your photo upload workspace is ready.</strong>

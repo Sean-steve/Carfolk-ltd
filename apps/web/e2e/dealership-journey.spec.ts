@@ -133,6 +133,30 @@ test('authenticated Carfolk command center is usable on desktop and mobile',asyn
  await expect(page.getByText(/Key details configured/)).toBeVisible();
  const adminOverflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
  expect(adminOverflow).toBeLessThanOrEqual(2);
+ if(testInfo.project.name==='desktop-chromium') {
+  // Reuse the admin session from this test to respect the 5/minute login throttle.
+  await page.goto(admin+'/manage/vehicles/create');
+  const unique='CI-O72-'+Date.now();
+  await page.locator('input[name="stock_reference"]').fill(unique);
+  await page.locator('input[name="make"]').fill('Mazda');
+  await page.locator('input[name="model"]').fill('Demio');
+  await page.locator('input[name="year"]').fill('2021');
+  await page.locator('input[name="price_kes"]').fill('1120000');
+  await page.getByRole('button',{name:/Create vehicle/i}).click();
+  await expect(page).toHaveURL(/edit#vehicle-photos$/);
+  await expect(page.getByText('Select up to 20 photos in one go')).toBeVisible();
+  const pixelPng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7JQxkAAAAASUVORK5CYII=','base64');
+  const photos=Array.from({length:20},(_,index)=>({
+   name:`ci-photo-${index+1}.png`,mimeType:'image/png',buffer:pixelPng
+  }));
+  await page.locator('input[type="file"][name="photos[]"]').setInputFiles(photos);
+  await expect(page.locator('[data-upload-selection]')).toContainText('20 selected');
+  await page.getByRole('button',{name:'Upload selected photos'}).click();
+  await expect(page.locator('.vehicle-image')).toHaveCount(20,{timeout:45000});
+  await expect(page.locator('.vehicle-photo-gallery-title')).toContainText('20 of 20');
+  await expect(page.locator('.vehicle-image .pill-available')).toHaveCount(1);
+  testInfo.annotations.push({type:'evidence',description:'One selection of 20 photos uploaded via four authenticated JSON batches'});
+ }
  testInfo.annotations.push({type:'evidence',description:'Carfolk authenticated operational overview and navigation certified on '+testInfo.project.name});
 });
 
@@ -156,4 +180,3 @@ test('restored public buyer guidance is coherent across vehicle discovery, compa
  await expect(page.getByRole('heading',{name:'Plan your visit with confidence.'})).toBeVisible();
  await expect(page.getByText('A viewing request is not an automatic appointment or vehicle reservation.')).toBeVisible();
 });
-
