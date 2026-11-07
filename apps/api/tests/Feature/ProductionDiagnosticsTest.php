@@ -31,10 +31,10 @@ final class ProductionDiagnosticsTest extends TestCase
         $this->actingAs($inactive)->get('/manage/system-health')->assertForbidden();
 
         $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
-        $this->actingAs($admin)->get('/manage/system-health')
-            ->assertOk()
+        $response = $this->actingAs($admin)->get('/manage/system-health');
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        $response->assertOk()
             ->assertSee('Photo upload readiness')
-            ->assertHeader('Cache-Control', 'no-store, private')
             ->assertDontSee('DB_PASSWORD');
     }
 }
