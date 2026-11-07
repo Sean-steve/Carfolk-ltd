@@ -29,9 +29,17 @@
   });
 
   async function optimize(file, options = {}) {
-    if (!(file instanceof Blob) || !valid.has(file.type) || file.size === 0) {
+    if (!(file instanceof Blob) || file.size === 0) {
       throw new Error('Choose a valid, nonempty JPEG, PNG or WebP photograph.');
     }
+    // A few mobile file pickers omit MIME types. In those cases, infer the
+    // declared type from an allowed extension; PHP still verifies real bytes.
+    const ext = (file.name || '').toLowerCase().match(/\.(jpe?g|png|webp)$/);
+    const inferred = ext ? ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[ext[1]]) : null;
+    if (!valid.has(file.type) && !(file.type === '' && inferred)) {
+      throw new Error('Only JPEG, PNG and WebP photos can be optimized.');
+    }
+    if (!file.type && inferred) file = new File([file], file.name, { type: inferred, lastModified: file.lastModified || Date.now() });
     if (file.size > MAX_SOURCE_BYTES) {
       throw new Error('This original image is larger than 60 MB. Reduce it before selecting it.');
     }
