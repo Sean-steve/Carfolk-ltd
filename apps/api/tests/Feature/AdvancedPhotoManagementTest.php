@@ -149,7 +149,7 @@ final class AdvancedPhotoManagementTest extends TestCase
     public function test_alt_text_and_editor_controls_and_auth(): void
     {
         $vehicle=$this->vehicle();
-        [$first]=$this->addPhotos($vehicle,1);
+        [$first,$second]=$this->addPhotos($vehicle,2);
         $url='/manage/vehicles/'.$vehicle->id.'/photos/'.$first->id.'/caption';
         $this->post($url,['alt_text'=>'Untouchable'])->assertRedirect('/manage/login');
         $this->actingAs($this->admin())->post($url,['alt_text'=>'  Passenger side exterior  '])->assertRedirect();
