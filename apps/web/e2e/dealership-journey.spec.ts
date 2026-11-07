@@ -146,16 +146,16 @@ test('authenticated Carfolk command center is usable on desktop and mobile',asyn
   await expect(page).toHaveURL(/edit#vehicle-photos$/);
   await expect(page.getByText('Select up to 20 photos in one go')).toBeVisible();
   const pixelPng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7JQxkAAAAASUVORK5CYII=','base64');
-  const photos=Array.from({length:7},(_,index)=>({
+  const photos=Array.from({length:20},(_,index)=>({
    name:`ci-photo-${index+1}.png`,mimeType:'image/png',buffer:pixelPng
   }));
   await page.locator('input[type="file"][name="photos[]"]').setInputFiles(photos);
-  await expect(page.locator('[data-upload-selection]')).toContainText('7 selected');
+  await expect(page.locator('[data-upload-selection]')).toContainText('20 selected');
   await page.getByRole('button',{name:'Upload selected photos'}).click();
-  await expect(page.locator('.vehicle-image')).toHaveCount(7,{timeout:45000});
-  await expect(page.locator('.vehicle-photo-gallery-title')).toContainText('7 of 20');
+  await expect(page.locator('.vehicle-image')).toHaveCount(20,{timeout:45000});
+  await expect(page.locator('.vehicle-photo-gallery-title')).toContainText('20 of 20');
   await expect(page.locator('.vehicle-image .pill-available')).toHaveCount(1);
-  testInfo.annotations.push({type:'evidence',description:'One selection of 7 photos uploaded via two authenticated JSON batches'});
+  testInfo.annotations.push({type:'evidence',description:'One selection of 20 photos uploaded via four authenticated JSON batches'});
  }
  testInfo.annotations.push({type:'evidence',description:'Carfolk authenticated operational overview and navigation certified on '+testInfo.project.name});
 });
