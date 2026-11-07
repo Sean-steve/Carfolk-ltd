@@ -15,7 +15,7 @@ mkdir -p "$STATE/backups"
 exec 9>"$STATE/deploy.lock"
 flock -n 9 || { echo 'Carfolk deployment already running'; exit 0; }
 [[ -f "$STATE/enabled" ]] || { echo 'Carfolk auto-deploy disabled: create ~/.carfolk-deploy/enabled only after backup approval'; exit 0; }
-for cmd in git tar rsync composer php curl; do command -v "$cmd" >/dev/null || { echo "Missing: $cmd" >&2; exit 1; }; done
+for cmd in git tar cp find composer php curl; do command -v "$cmd" >/dev/null || { echo "Missing: $cmd" >&2; exit 1; }; done
 [[ -f "$API/.env" && -f "$PUBLIC/index.php" && -f "$PUBLIC/.htaccess" && -f "$PUBLIC/index.html" ]] || { echo 'Existing application not completely provisioned' >&2; exit 1; }
 [[ "$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')" == '8.4' ]] || { echo 'Expected PHP 8.4 CLI' >&2; exit 1; }
 php -r 'exit(extension_loaded("pdo_pgsql") ? 0 : 1);' || { echo 'Missing PostgreSQL PHP driver' >&2; exit 1; }
@@ -30,14 +30,47 @@ STAGE="$(mktemp -d "$STATE/stage.XXXXXXXX")"
 BACKUP=''
 MUTATED=0
 cleanup() { rm -rf -- "$STAGE"; }
+
+# Shared cPanel hosting may not provide rsync. Copy only managed API code,
+# retaining the .env*, storage (including customer photos), and the runtime
+# bootstrap/cache directory. Restore the exact managed-code snapshot on failure.
+# Never use this against an arbitrary directory: destination must be $API.
+sync_api_code() {
+  local source="$1" destination="$2" entry filename child
+  [[ "$destination" == "$API" && -d "$source" && -d "$destination" && -f "$destination/.env" ]] || {
+    echo 'API sync refused: unexpected target or missing runtime .env' >&2
+    return 1
+  }
+  while IFS= read -r -d '' entry; do
+    filename="${entry##*/}"
+    case "$filename" in
+      .env*|storage) continue ;;
+      bootstrap)
+        if [[ -d "$entry" && ! -L "$entry" ]]; then
+          while IFS= read -r -d '' child; do
+            [[ "${child##*/}" == cache ]] || rm -rf -- "$child"
+          done < <(find "$entry" -mindepth 1 -maxdepth 1 -print0)
+        else
+          echo 'API sync refused: unexpected bootstrap directory type' >&2
+          return 1
+        fi
+        continue ;;
+    esac
+    rm -rf -- "$entry"
+  done < <(find "$destination" -mindepth 1 -maxdepth 1 -print0)
+  # Preserve runtime directories and never extract files from old live storage.
+  (cd "$source" && tar --exclude='./.env*' --exclude='./storage' --exclude='./bootstrap/cache' -cf - .) \
+    | (cd "$destination" && tar -xf -)
+}
+
 rollback() {
   echo 'Deploy failed; reverting application files (database/uploads untouched)' >&2
-  rsync -a --delete --exclude='/.env*' --exclude='/storage/' --exclude='/bootstrap/cache/' "$BACKUP/api/" "$API/" || true
+  sync_api_code "$BACKUP/api" "$API" || true
   [[ -f "$BACKUP/index.html" ]] && cp -p "$BACKUP/index.html" "$PUBLIC/index.html" || true
   for part in css brand js; do
     if [[ -d "$BACKUP/$part" ]]; then
       mkdir -p "$PUBLIC/$part"
-      rsync -a "$BACKUP/$part/" "$PUBLIC/$part/" || true
+      cp -a "$BACKUP/$part/." "$PUBLIC/$part/" || true
     fi
   done
   (cd "$API" && php artisan config:clear && php artisan config:cache) || true
@@ -71,7 +104,8 @@ fi
 STAMP="$(date -u +'%Y%m%dT%H%M%SZ')"
 BACKUP="$STATE/backups/$STAMP-$RELEASE_ID"
 mkdir -p "$BACKUP/api"
-rsync -a --exclude='/.env*' --exclude='/storage/' --exclude='/bootstrap/cache/' "$API/" "$BACKUP/api/"
+(cd "$API" && tar --exclude='./.env*' --exclude='./storage' --exclude='./bootstrap/cache' -cf - .) \
+  | (cd "$BACKUP/api" && tar -xf -)
 cp -p "$PUBLIC/index.html" "$BACKUP/index.html"
 for part in css brand js; do
   [[ -d "$PUBLIC/$part" ]] && cp -a "$PUBLIC/$part" "$BACKUP/$part"
@@ -79,20 +113,22 @@ done
 
 MUTATED=1
 # Keep live .env, Laravel storage (including vehicle photos), and framework caches.
-rsync -a --delete --exclude='/.env*' --exclude='/storage/' --exclude='/bootstrap/cache/' "$STAGE/api/" "$API/"
+sync_api_code "$STAGE/api" "$API"
 (cd "$API" && php artisan package:discover --ansi && php artisan config:clear && php artisan config:cache && php artisan view:cache)
 for part in css brand js; do
   if [[ -d "$API/public/$part" ]]; then
     mkdir -p "$PUBLIC/$part"
-    rsync -a "$API/public/$part/" "$PUBLIC/$part/"
+    cp -a "$API/public/$part/." "$PUBLIC/$part/"
   fi
 done
 # Copy hashed assets first; replace the HTML entry point last.
-rsync -a "$STAGE/web/assets/" "$PUBLIC/assets/"
-rsync -a --exclude='/index.html' --exclude='/assets/' --exclude='/robots.txt' \
-  --exclude='/index.php' --exclude='/.htaccess' --exclude='/.user.ini' \
-  --exclude='/php.ini' --exclude='/storage/' --exclude='/cgi-bin/' \
-  --exclude='/.well-known/' "$STAGE/web/" "$PUBLIC/"
+mkdir -p "$PUBLIC/assets"
+cp -a "$STAGE/web/assets/." "$PUBLIC/assets/"
+(cd "$STAGE/web" && tar --exclude='./index.html' --exclude='./assets' \
+  --exclude='./robots.txt' --exclude='./index.php' --exclude='./.htaccess' \
+  --exclude='./.user.ini' --exclude='./php.ini' --exclude='./storage' \
+  --exclude='./cgi-bin' --exclude='./.well-known' -cf - .) \
+  | (cd "$PUBLIC" && tar -xf -)
 cp "$STAGE/web/index.html" "$PUBLIC/.carfolk-index.new"
 mv -f "$PUBLIC/.carfolk-index.new" "$PUBLIC/index.html"
 # Confirm every O7 admin bundle is served as actual JavaScript, not SPA HTML.
