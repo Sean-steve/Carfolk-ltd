@@ -16,6 +16,8 @@ final class ProductionDiagnosticsTest extends TestCase
         $this->assertSame(8 * 1024 * 1024, UploadCapacity::bytes('8M'));
         $this->assertSame(50 * 1024 * 1024, UploadCapacity::bytes('50MB'));
         $this->assertSame(41 * 1024 * 1024, UploadCapacity::MIN_POST_BYTES);
+        $this->assertSame(1536 * 1024, UploadCapacity::OPTIMIZED_TARGET_BYTES);
+        $this->assertSame(2 * 1024 * 1024, UploadCapacity::OPTIMIZED_SINGLE_POST_BYTES);
         $this->assertSame(0, UploadCapacity::bytes('0'));
         $this->assertNull(UploadCapacity::bytes('not a size'));
     }
@@ -35,6 +37,7 @@ final class ProductionDiagnosticsTest extends TestCase
         $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
         $response->assertOk()
             ->assertSee('Photo upload readiness')
+            ->assertSee('Optimized photo uploads')
             ->assertDontSee('DB_PASSWORD');
     }
 }
