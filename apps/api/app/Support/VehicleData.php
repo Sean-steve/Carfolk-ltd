@@ -35,6 +35,9 @@ class VehicleData {
       'published_at'=>$vehicle->created_at?->toIso8601String(),
       'images'=>$vehicle->images->map(fn($i)=>[
          'id'=>$i->id,'url'=>\Illuminate\Support\Facades\Storage::disk($i->disk)->url($i->path),
+         'thumbnail_url'=>VehicleImageVariants::urlFor($i,'thumb'),
+         'card_url'=>VehicleImageVariants::urlFor($i,'card'),
+         'detail_url'=>VehicleImageVariants::urlFor($i,'detail'),
          'alt_text'=>$i->alt_text,'is_primary'=>$i->is_primary,'sort_order'=>$i->sort_order,
       ])->values()->all(),
     ];

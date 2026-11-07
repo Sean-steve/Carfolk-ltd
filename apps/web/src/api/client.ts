@@ -11,7 +11,7 @@ export type Vehicle = {
  fuel_type:string|null;transmission:string|null;drivetrain:string|null;
  body_type:string|null;condition:string|null;colour:string|null;location:string|null;
  description:string|null;features:string[];status:'available'|'reserved'|'sold';
- is_featured:boolean;images:{id:string;url:string;alt_text:string|null;is_primary:boolean;sort_order:number}[];
+ is_featured:boolean;images:{id:string;url:string;thumbnail_url?:string|null;card_url?:string|null;detail_url?:string|null;alt_text:string|null;is_primary:boolean;sort_order:number}[];
 };
 export type Site = {
  name:string;tagline:string;phone:string|null;whatsapp:string|null;email:string|null;
