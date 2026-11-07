@@ -43,6 +43,7 @@ class PhotoManager {
        $created=[];
        foreach($photos as $index=>$photo) {
          if(!$photo instanceof UploadedFile)abort(422,'Invalid photo file.');
+         PhotoImageGuard::validate($photo,'photos.'.$index);
          $path=$photo->store('vehicles/'.$locked->id,'public');
          if(!$path)throw new \RuntimeException('Unable to store vehicle photo.');
          $paths[]=$path;
