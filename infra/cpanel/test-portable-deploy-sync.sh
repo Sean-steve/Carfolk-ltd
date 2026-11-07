@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Unit-check the actual portable sync function without sourcing the deployer.
+# All mutations happen under a throwaway temp folder, never under /home2.
+set -Eeuo pipefail
+tmp="$(mktemp -d)"
+trap 'rm -rf -- "$tmp"' EXIT
+API="$tmp/live-api"
+stage="$tmp/stage-api"
+snapshot="$tmp/snapshot-api"
+mkdir -p "$API"/{app,storage/app/public,bootstrap/cache,public/js} "$stage"/{app,storage/app/public,bootstrap/cache,public/js} "$snapshot"
+printf 'LIVE-ONLY-SECRET\n' > "$API/.env"
+printf 'user-photo-content\n' > "$API/storage/app/public/photo.jpg"
+printf 'keep-me\n' > "$API/bootstrap/cache/config.php"
+printf 'old-version\n' > "$API/app/Old.php"
+printf 'old-bootstrap\n' > "$API/bootstrap/old.php"
+printf 'old-js\n' > "$API/public/js/old.js"
+
+printf 'MUST-NOT-OVERWRITE\n' > "$stage/.env"
+printf 'MUST-NOT-OVERWRITE-PHOTO\n' > "$stage/storage/app/public/photo.jpg"
+printf 'MUST-NOT-OVERWRITE-CACHE\n' > "$stage/bootstrap/cache/config.php"
+printf 'new-version\n' > "$stage/app/New.php"
+printf 'new-bootstrap\n' > "$stage/bootstrap/new.php"
+printf 'new-js\n' > "$stage/public/js/new.js"
+
+# Extract only the helper function, not the potentially destructive script body.
+sed -n '/^sync_api_code() {/,/^}/p' infra/cpanel/deploy.sh > "$tmp/sync.sh"
+# shellcheck source=/dev/null
+source "$tmp/sync.sh"
+[[ "$(type -t sync_api_code)" == function ]]
+
+(cd "$API" && tar --exclude='./.env*' --exclude='./storage' --exclude='./bootstrap/cache' -cf - .) \
+  | (cd "$snapshot" && tar -xf -)
+sync_api_code "$stage" "$API"
+
+[[ "$(cat "$API/.env")" == LIVE-ONLY-SECRET ]]
+[[ "$(cat "$API/storage/app/public/photo.jpg")" == user-photo-content ]]
+[[ "$(cat "$API/bootstrap/cache/config.php")" == keep-me ]]
+[[ "$(cat "$API/app/New.php")" == new-version ]]
+[[ "$(cat "$API/bootstrap/new.php")" == new-bootstrap ]]
+[[ "$(cat "$API/public/js/new.js")" == new-js ]]
+[[ ! -e "$API/app/Old.php" && ! -e "$API/bootstrap/old.php" && ! -e "$API/public/js/old.js" ]]
+[[ ! -f "$snapshot/.env" && ! -e "$snapshot/storage" && ! -e "$snapshot/bootstrap/cache" ]]
+
+# Rollback replaces managed code, without touching any runtime data.
+sync_api_code "$snapshot" "$API"
+[[ "$(cat "$API/app/Old.php")" == old-version ]]
+[[ "$(cat "$API/bootstrap/old.php")" == old-bootstrap ]]
+[[ "$(cat "$API/public/js/old.js")" == old-js ]]
+[[ ! -e "$API/app/New.php" ]]
+[[ "$(cat "$API/.env")" == LIVE-ONLY-SECRET ]]
+[[ "$(cat "$API/storage/app/public/photo.jpg")" == user-photo-content ]]
+[[ "$(cat "$API/bootstrap/cache/config.php")" == keep-me ]]
+
+# Fail closed on an unexpected destination.
+if sync_api_code "$stage" "$tmp/elsewhere" 2>/dev/null; then
+  echo 'Portable sync accepted an unexpected target' >&2
+  exit 1
+fi
+
+echo 'Portable cPanel sync and rollback checks passed'
