@@ -69,6 +69,30 @@ sync_api_code() {
     | (cd "$destination" && tar -xf -)
 }
 
+# The private deployer uses umask 077 for credentials and backups. Files copied
+# into public_html may inherit 600/700 as a result; LiteSpeed cannot then serve
+# either the homepage or static assets (often reporting HTTP 404). Normalize
+# ONLY known public paths, including during rollback. Do not chmod Laravel API,
+# storage, or arbitrary hidden files.
+restore_public_permissions() {
+  [[ "$PUBLIC" == '/home2/carfolkl/public_html' || ( -n "${TEST_PUBLIC_ROOT:-}" && "$PUBLIC" == "$TEST_PUBLIC_ROOT" ) ]] || {
+    echo 'Refusing permissions update outside the expected public root' >&2
+    return 1
+  }
+  [[ -d "$PUBLIC" && ! -L "$PUBLIC" ]] || return 1
+  chmod 755 "$PUBLIC"
+  for part in js css brand assets; do
+    if [[ -d "$PUBLIC/$part" && ! -L "$PUBLIC/$part" ]]; then
+      find "$PUBLIC/$part" -type d -exec chmod 755 {} +
+      find "$PUBLIC/$part" -type f -exec chmod 644 {} +
+    fi
+  done
+  # The SPA entry point is replaced via cp+mv with umask 077.
+  # This targets public root files, excluding hidden operational files.
+  find "$PUBLIC" -mindepth 1 -maxdepth 1 -type f ! -name '.*' -exec chmod 644 {} +
+  [[ ! -f "$PUBLIC/.htaccess" ]] || chmod 644 "$PUBLIC/.htaccess"
+}
+
 rollback() {
   echo 'Deploy failed; reverting application files (database/uploads untouched)' >&2
   sync_api_code "$BACKUP/api" "$API" || true
@@ -79,6 +103,7 @@ rollback() {
       cp -a "$BACKUP/$part/." "$PUBLIC/$part/" || true
     fi
   done
+  restore_public_permissions || true
   (cd "$API" && php artisan config:clear && php artisan config:cache) || true
 }
 failed() {
@@ -137,6 +162,7 @@ cp -a "$STAGE/web/assets/." "$PUBLIC/assets/"
   | (cd "$PUBLIC" && tar -xf -)
 cp "$STAGE/web/index.html" "$PUBLIC/.carfolk-index.new"
 mv -f "$PUBLIC/.carfolk-index.new" "$PUBLIC/index.html"
+restore_public_permissions
 # Confirm every O7 admin bundle is served as actual JavaScript, not SPA HTML.
 # O7.2 extracted upload handling from admin-errors.js; checking the old marker
 # there would wrongly roll back an otherwise valid deployment.
