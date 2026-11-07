@@ -143,7 +143,7 @@ final class AdvancedPhotoManagementTest extends TestCase
         $this->assertSame(1,$new->sort_order);
         $this->assertSame('Angle 1',$new->alt_text);
         $this->assertSame(2,$vehicle->images()->count());
-        $this->assertSame($second->id,$vehicle->images()->orderByDesc('sort_order')->first()->id);
+        $this->assertSame($second->id,$vehicle->images()->get()->last()->id);
     }
 
     public function test_alt_text_and_editor_controls_and_auth(): void
