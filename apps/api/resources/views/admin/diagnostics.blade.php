@@ -5,12 +5,13 @@
  <section class="panel admin-edit">
   <div class="panel-head"><h2>Photo upload readiness</h2><p>These are the PHP limits seen by the website, which may differ from PHP in cPanel Terminal.</p></div>
   <div class="experience-stats experience-stats--settings">
-   <div><span>MAXIMUM FILE UPLOAD</span><strong>{{ $checks['upload_max_filesize'] }}</strong><small>{{ $checks['upload_ready'] ? 'Ready for 8 MB photos' : 'Below required 8 MB per photo' }}</small></div>
-   <div><span>MAXIMUM POST REQUEST</span><strong>{{ $checks['post_max_size'] }}</strong><small>{{ $checks['batch_ready'] ? 'Allows a five-photo batch' : 'Must allow at least 41 MB including overhead' }}</small></div>
+   <div><span>MAXIMUM FILE UPLOAD</span><strong>{{ $checks['upload_max_filesize'] }}</strong><small>{{ $checks['upload_ready'] ? 'Allows a full 8 MB original' : 'Smaller optimized files may still upload' }}</small></div>
+   <div><span>MAXIMUM POST REQUEST</span><strong>{{ $checks['post_max_size'] }}</strong><small>{{ $checks['batch_ready'] ? 'Allows five 8 MB files in one request' : 'Uploader splits batches to fit available capacity' }}</small></div>
   </div>
   <div class="experience-guidance" role="status">
-   <strong>Upload configuration: {{ $checks['upload_ready'] && $checks['batch_ready'] && $checks['image_storage_ready'] ? 'Ready for live verification' : 'Needs hosting configuration' }}</strong>
-   <p>Web PHP limits alone do not confirm Apache, ModSecurity or proxy request-size restrictions. Complete the five-photo live test to certify upload availability.</p>
+   <strong>Optimized photo uploads: {{ $checks['optimized_ready'] && $checks['image_storage_ready'] ? 'PHP eligible — test a real upload' : 'PHP settings or storage need adjustment' }}</strong>
+   <p>Carfolk resizes and compresses selected photographs in the browser to approximately 1.5 MB where practical, and splits uploads into smaller requests. The 8 MB maximum and 41 MB maximum-size batch requirements above only apply to uncompressed uploads.</p>
+   <p>Web PHP limits alone cannot confirm Apache, ModSecurity or proxy restrictions. Perform live tests with one optimized photo and a complete selection before certifying this server.</p>
   </div>
   <h3>Protected storage checks</h3>
   <p>Photo storage: <strong>{{ $checks['image_storage_ready'] ? 'Writable' : 'Not writable' }}</strong></p>

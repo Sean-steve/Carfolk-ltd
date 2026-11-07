@@ -74,12 +74,14 @@
    @else<span class="vehicle-photo-section__badge vehicle-photo-section__badge--pending">Save details to enable</span>@endif
   </div>
   @if($mode==='edit')
-   <div class="vehicle-photo-instructions"><strong>Select up to 20 photos in one go</strong><p>Carfolk automatically uploads in small batches of up to five files per request, respecting this server's size limits. Your gallery updates when every batch finishes.</p></div>
+   <div class="vehicle-photo-instructions"><strong>Select photos — Carfolk will optimize them automatically</strong><p>Choose up to 20 images. Large photos are resized and compressed on your device before upload. Check the previews and size reductions, then upload in safe small batches.</p></div>
   <form class="photo-upload" method="post" enctype="multipart/form-data" action="{{ route('manage.vehicles.photos.add',$vehicle) }}" data-photo-upload data-existing-photos="{{ $vehicle->images->count() }}" data-server-file-limit="{{ ini_get('upload_max_filesize') }}" data-server-post-limit="{{ ini_get('post_max_size') }}">@csrf
-   <label>Choose photos (up to {{ max(0,20-$vehicle->images->count()) }} remaining; JPEG, PNG or WebP, 8 MB each)<input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required aria-describedby="photo-selection-hint"></label>
+   <label>Choose photos (up to {{ max(0,20-$vehicle->images->count()) }} remaining; JPEG, PNG or WebP; originals up to 60 MB)<input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required aria-describedby="photo-selection-hint"></label>
    <label>Alternative text<input name="alt_text" maxlength="200" placeholder="e.g. Front view of vehicle"></label>
    <button type="submit" class="btn btn-primary">Upload selected photos</button>
-   <p id="photo-selection-hint" class="bulk-upload-selection" data-upload-selection role="status" aria-live="polite">Select up to {{ max(0,20-$vehicle->images->count()) }} photos at once; uploaded in batches automatically.</p>
+   <p id="photo-selection-hint" class="bulk-upload-selection" data-upload-selection role="status" aria-live="polite">Select up to {{ max(0,20-$vehicle->images->count()) }} photos at once; images are optimized before upload.</p>
+   <p class="bulk-optimization-status" data-optimization-status role="status" aria-live="polite" hidden>Preparing photo previews…</p>
+   <div class="bulk-optimized-previews" data-optimized-previews aria-label="Optimized photo previews" hidden></div>
    <div class="bulk-upload-status" data-bulk-status hidden>
     <label for="bulk-photo-progress">Photo upload progress</label>
     <progress id="bulk-photo-progress" max="20" value="0" data-bulk-progress></progress>
@@ -87,7 +89,7 @@
     <button type="button" class="btn btn-outline" data-bulk-retry hidden>Retry remaining photos</button>
    </div>
    <p class="flash flash-error photo-upload-error" data-upload-error tabindex="-1" role="alert" hidden></p>
-   <noscript><p class="experience-footnote">JavaScript is required to select more than five photos. Without JavaScript, select at most five photos per upload.</p></noscript>
+   <noscript><p class="experience-footnote">JavaScript is required for resizing and more than five photos per selection. Without JavaScript, each original photo must be within this server's file and request limits; upload no more than five at a time.</p></noscript>
   </form>
 
    <h3 class="vehicle-photo-gallery-title">Uploaded photos <small>({{ $vehicle->images->count() }} of 20)</small></h3>
@@ -98,7 +100,7 @@
    @endforelse
   </div>
 
-   <p class="experience-footnote">Accepted: JPEG, PNG or WebP, up to 20 photos per vehicle (8 MB each). Select up to all remaining photos at once; Carfolk sends requests in batches of five or fewer. Automatic compression of oversized photos is planned for O7.3. Only upload images Carfolk is allowed to publish.</p>
+   <p class="experience-footnote">Accepted: JPEG, PNG or WebP, up to 20 photos per vehicle. Carfolk optimizes selected images toward 2560px maximum edge and approximately 1.5 MB where practical, then sends batches of five or fewer within server request limits (8 MB maximum per uploaded image). Originals remain on your device. Only upload images Carfolk is allowed to publish.</p>
   @else
    <div class="vehicle-photo-locked">
     <strong>Your photo upload workspace is ready.</strong>
