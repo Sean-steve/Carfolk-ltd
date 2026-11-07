@@ -90,6 +90,10 @@ final class AdvancedPhotoManagementTest extends TestCase
         $this->assertSame([1,2,3], $vehicle->images()->pluck('sort_order')->all());
         $this->getJson('/api/v1/vehicles/'.$vehicle->slug)->assertOk()
             ->assertJsonPath('data.images.2.is_primary', true);
+        // SEO image, like the buyer cards, must reflect the new primary.
+        $this->get('/listing/'.$vehicle->slug)->assertOk()
+            ->assertSee(Storage::disk('public')->url($third->path), false)
+            ->assertDontSee(Storage::disk('public')->url($first->path), false);
     }
 
     public function test_gallery_reorder_is_persisted_to_public_api(): void
