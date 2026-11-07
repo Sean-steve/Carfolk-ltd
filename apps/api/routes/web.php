@@ -31,9 +31,16 @@ Route::prefix('manage')->name('manage.')->group(function() {
         Route::get('/vehicles/create',[VehicleAdminController::class,'create'])->name('vehicles.create');
         Route::post('/vehicles',[VehicleAdminController::class,'store'])->name('vehicles.store');
         Route::get('/vehicles/{vehicle}/edit',[VehicleAdminController::class,'edit'])->name('vehicles.edit');
+        Route::get('/vehicles/{vehicle}/preview',[VehicleAdminController::class,'preview'])->name('vehicles.preview');
         Route::patch('/vehicles/{vehicle}',[VehicleAdminController::class,'update'])->name('vehicles.update');
         Route::delete('/vehicles/{vehicle}',[VehicleAdminController::class,'archive'])->name('vehicles.archive');
         Route::post('/vehicles/{vehicle}/photos',[VehicleAdminController::class,'upload'])->name('vehicles.photos.add');
+        // Keep the fixed /order route before the variable /{image} routes.
+        Route::post('/vehicles/{vehicle}/photos/order',[VehicleAdminController::class,'orderPhotos'])->name('vehicles.photos.order');
+        Route::post('/vehicles/{vehicle}/photos/{image}/move',[VehicleAdminController::class,'movePhoto'])->name('vehicles.photos.move');
+        Route::post('/vehicles/{vehicle}/photos/{image}/primary',[VehicleAdminController::class,'primaryPhoto'])->name('vehicles.photos.primary');
+        Route::post('/vehicles/{vehicle}/photos/{image}/caption',[VehicleAdminController::class,'captionPhoto'])->name('vehicles.photos.caption');
+        Route::post('/vehicles/{vehicle}/photos/{image}/replace',[VehicleAdminController::class,'replacePhoto'])->name('vehicles.photos.replace');
         Route::delete('/vehicles/{vehicle}/photos/{image}',[VehicleAdminController::class,'removePhoto'])->name('vehicles.photos.remove');
         Route::get('/enquiries',[LeadAdminController::class,'enquiries'])->name('enquiries');
         Route::patch('/enquiries/{enquiry}',[LeadAdminController::class,'updateEnquiry'])->name('enquiries.update');

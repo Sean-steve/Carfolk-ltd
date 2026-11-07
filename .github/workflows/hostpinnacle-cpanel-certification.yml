@@ -24,6 +24,17 @@ jobs:
         run: |
           bash -n infra/cpanel/preflight.sh
           bash -n infra/cpanel/deploy-release.sh
+          bash -n infra/cpanel/deploy.sh
+      - name: Check O7 release includes every photo administration bundle
+        run: |
+          set -euo pipefail
+          for asset in admin-errors.js admin-image-optimizer.js admin-bulk-photos.js admin-photo-gallery.js; do
+            test -s "apps/api/public/js/$asset"
+            grep -Fq "$asset" infra/cpanel/deploy.sh
+          done
+          grep -Fq 'data-photo-upload' apps/api/public/js/admin-bulk-photos.js
+          grep -Fq 'CarfolkImageOptimizer' apps/api/public/js/admin-image-optimizer.js
+          grep -Fq 'data-gallery-sort' apps/api/public/js/admin-photo-gallery.js
       - name: PHP public bootstrap syntax
         run: php -l infra/cpanel/front-controller.php
       - name: Verify safe defaults and fail-closed initial activation

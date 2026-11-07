@@ -1,7 +1,10 @@
 @extends('admin.layout')
 @section('title',$mode==='create'?'Add Vehicle':'Edit Vehicle')
 @section('eyebrow','INVENTORY MANAGEMENT')
-@section('actions')<a class="btn btn-outline" href="{{ route('manage.vehicles.index') }}">← Back to inventory</a>@endsection
+@section('actions')
+ @if($mode==='edit')<a class="btn btn-primary" href="{{ route('manage.vehicles.preview',$vehicle) }}">Preview vehicle listing ↗</a>@endif
+ <a class="btn btn-outline" href="{{ route('manage.vehicles.index') }}">← Back to inventory</a>
+@endsection
 @section('content')
  <p class="admin-intro">{{ $mode==='create'?'Create the vehicle record first, then add photographs in the clearly marked Photos step.':'Update the vehicle details or jump straight to the Photos step to manage the listing gallery.' }}</p>
  <nav class="vehicle-stepper" aria-label="Vehicle setup">
@@ -68,7 +71,7 @@
   <div class="panel-head vehicle-photo-section__head">
    <div><span class="admin-kicker">STEP 2 · LISTING PHOTOGRAPHS</span>
     <h2 id="vehicle-photo-title">Vehicle photos @if($mode==='edit')<small>({{ $vehicle->images->count() }}/20)</small>@endif</h2>
-    <p>Add clear, approved photos of this exact vehicle. The first uploaded image is used as the main photo.</p>
+    <p>Add clear, approved photos of this exact vehicle. Choose the main image, adjust their order and preview the complete listing before publishing.</p>
    </div>
    @if($mode==='edit')<span class="vehicle-photo-section__badge">Photo upload available</span>
    @else<span class="vehicle-photo-section__badge vehicle-photo-section__badge--pending">Save details to enable</span>@endif
@@ -92,13 +95,52 @@
    <noscript><p class="experience-footnote">JavaScript is required for resizing and more than five photos per selection. Without JavaScript, each original photo must be within this server's file and request limits; upload no more than five at a time.</p></noscript>
   </form>
 
-   <h3 class="vehicle-photo-gallery-title">Uploaded photos <small>({{ $vehicle->images->count() }} of 20)</small></h3>
-  <div class="vehicle-images">
+   <div class="vehicle-gallery-heading">
+    <div><h3 class="vehicle-photo-gallery-title">Manage photo gallery <small>({{ $vehicle->images->count() }} of 20)</small></h3><p>Drag images to reorder on desktop, or use Move up / Move down buttons on any device. Select the main photo used for buyers.</p></div>
+    <a class="btn btn-primary" href="{{ route('manage.vehicles.preview',$vehicle) }}">Preview complete listing ↗</a>
+   </div>
+  <div class="vehicle-images vehicle-images--manage" data-gallery-sort>
    @forelse($vehicle->images as $image)
-   <div class="vehicle-image"><img src="{{ \Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" alt="{{ $image->alt_text??'Vehicle photograph' }}"><div class="vehicle-image__meta">@if($image->is_primary)<span class="pill pill-available">Primary</span>@endif<form method="post" action="{{ route('manage.vehicles.photos.remove',[$vehicle,$image]) }}">@csrf @method('DELETE')<button type="submit">Remove</button></form></div></div>
-   @empty <p class="empty">No photos yet. Add a front, rear and interior view when available and approved for use.</p>
+    <article class="vehicle-image vehicle-image--manage" data-image-id="{{ $image->id }}" draggable="true" aria-label="Vehicle photo {{ $loop->iteration }}">
+     <div class="vehicle-image__visual">
+      <img src="{{ \Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" alt="{{ $image->alt_text??('Photo '.$loop->iteration.' of this vehicle') }}">
+      @if($image->is_primary)<span class="pill pill-available vehicle-image__primary">Main photo</span>@endif
+      <span class="vehicle-image__position">Photo {{ $loop->iteration }}</span>
+     </div>
+     <div class="vehicle-image__controls">
+      @unless($image->is_primary)
+       <form method="post" action="{{ route('manage.vehicles.photos.primary',[$vehicle,$image]) }}">@csrf
+        <button type="submit" class="btn btn-outline btn-small">Set as main photo</button>
+       </form>
+      @endunless
+      <form method="post" action="{{ route('manage.vehicles.photos.move',[$vehicle,$image]) }}" class="vehicle-image__move">@csrf
+       <button class="btn btn-outline btn-small" type="submit" name="direction" value="up" @disabled($loop->first)>↑ Move up</button>
+       <button class="btn btn-outline btn-small" type="submit" name="direction" value="down" @disabled($loop->last)>↓ Move down</button>
+      </form>
+      <form method="post" action="{{ route('manage.vehicles.photos.caption',[$vehicle,$image]) }}" class="vehicle-image__caption">@csrf
+       <label>Photo description<input type="text" name="alt_text" maxlength="200" value="{{ $image->alt_text }}" placeholder="e.g. Driver-side exterior"></label>
+       <button class="btn btn-outline btn-small" type="submit">Save description</button>
+      </form>
+      <form method="post" enctype="multipart/form-data" action="{{ route('manage.vehicles.photos.replace',[$vehicle,$image]) }}" class="vehicle-image__replace" data-photo-replace data-server-file-limit="{{ ini_get('upload_max_filesize') }}">@csrf
+       <label>Replace this photo<input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required></label>
+       <small data-replace-status>Choose a replacement. Large photos will be optimized first.</small>
+       <button class="btn btn-outline btn-small" type="submit">Replace photo</button>
+      </form>
+      <form method="post" action="{{ route('manage.vehicles.photos.remove',[$vehicle,$image]) }}" onsubmit="return confirm('Remove this vehicle photo?');">@csrf @method('DELETE')
+       <button type="submit" class="btn btn-small vehicle-image__remove">Remove photo</button>
+      </form>
+     </div>
+    </article>
+   @empty <p class="empty">No photos yet. Add an exterior, rear and interior view when available and approved for use.</p>
    @endforelse
   </div>
+  @if($vehicle->images->count()>1)
+   <form method="post" action="{{ route('manage.vehicles.photos.order',$vehicle) }}" data-photo-order class="vehicle-photo-order-form">@csrf
+    <div data-order-inputs>@foreach($vehicle->images as $image)<input type="hidden" name="order[]" value="{{ $image->id }}">@endforeach</div>
+    <button type="submit" class="btn btn-primary">Save photo order</button>
+    <p>Dragging changes the order here; click Save photo order to make it permanent. Move up / Move down saves immediately.</p>
+   </form>
+  @endif
 
    <p class="experience-footnote">Accepted: JPEG, PNG or WebP, up to 20 photos per vehicle. Carfolk optimizes selected images toward 2560px maximum edge and approximately 1.5 MB where practical, then sends batches of five or fewer within server request limits (8 MB maximum per uploaded image). Originals remain on your device. Only upload images Carfolk is allowed to publish.</p>
   @else

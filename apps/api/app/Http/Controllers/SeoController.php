@@ -66,7 +66,7 @@ class SeoController extends Controller
         $vehicle = Vehicle::published()->with('images')->where('slug', $slug)->firstOrFail();
         $site = SiteSetting::publicDetails();
         $canonical = $this->publicOrigin() ? $this->publicOrigin().'/listing/'.rawurlencode($slug) : null;
-        $photo = $vehicle->images->first();
+        $photo = $vehicle->images->firstWhere('is_primary', true) ?? $vehicle->images->first();
         $image = $photo ? Storage::disk($photo->disk)->url($photo->path) : null;
         if ($image && str_starts_with($image, '/')) $image = url($image);
         $title = trim($vehicle->year.' '.$vehicle->make.' '.$vehicle->model.' '.$vehicle->trim);

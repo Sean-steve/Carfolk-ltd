@@ -95,8 +95,16 @@ rsync -a --exclude='/index.html' --exclude='/assets/' --exclude='/robots.txt' \
   --exclude='/.well-known/' "$STAGE/web/" "$PUBLIC/"
 cp "$STAGE/web/index.html" "$PUBLIC/.carfolk-index.new"
 mv -f "$PUBLIC/.carfolk-index.new" "$PUBLIC/index.html"
-# Confirm the O6 administrative upload guard is served as JavaScript, not SPA HTML.
-curl --fail --silent --show-error --max-time 20 "$ORIGIN/js/admin-errors.js" | grep -q 'data-photo-upload'
+# Confirm every O7 admin bundle is served as actual JavaScript, not SPA HTML.
+# O7.2 extracted upload handling from admin-errors.js; checking the old marker
+# there would wrongly roll back an otherwise valid deployment.
+for asset in admin-errors.js admin-image-optimizer.js admin-bulk-photos.js admin-photo-gallery.js; do
+  curl --fail --silent --show-error --max-time 20 "$ORIGIN/js/$asset" > "$STAGE/$asset"
+  [[ -s "$STAGE/$asset" ]] || { echo "Admin JavaScript missing: $asset" >&2; exit 1; }
+done
+grep -q 'data-photo-upload' "$STAGE/admin-bulk-photos.js"
+grep -q 'CarfolkImageOptimizer' "$STAGE/admin-image-optimizer.js"
+grep -q 'data-gallery-sort' "$STAGE/admin-photo-gallery.js"
 for endpoint in /up /api/v1/site /api/v1/vehicles /manage/login; do
   curl --fail --silent --show-error --max-time 20 --output /dev/null "$ORIGIN$endpoint"
 done

@@ -14,6 +14,13 @@ export function VehicleDetailPage({slug}:{slug:string}){
  const images=vehicle?.images??[];
  const photoCount=Math.max(1,images.length);
  useEffect(()=>{setIndex(0);setExpanded(false)},[slug]);
+ // The featured buyer-facing image is the explicitly selected primary photo,
+ // even if staff have chosen a different thumbnail gallery order.
+ useEffect(()=>{
+   if(!vehicle)return;
+   const primary=vehicle.images.findIndex(image=>image.is_primary);
+   setIndex(primary>=0?primary:0);
+ },[vehicle?.id,vehicle?.images]);
  useEffect(()=>{
   const handle=(e:KeyboardEvent)=>{if(e.key==='Escape')setExpanded(false);
    if(expanded&&e.key==='ArrowRight')setIndex(i=>(i+1)%photoCount);

@@ -14,7 +14,7 @@
 <main class="wrap">
 <nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/#/cars">Cars for sale</a> / <span>{{ $title }}</span></nav>
 <div class="hero"><div class="media">
-@if($image)<img src="{{ $image }}" alt="{{ $vehicle->images->first()->alt_text ?: 'Vehicle photo: '.$title }}">@else<div class="placeholder">Vehicle photographs pending</div>@endif
+@if($image)<img src="{{ $image }}" alt="{{ ($vehicle->images->firstWhere('is_primary',true)??$vehicle->images->first())->alt_text ?: 'Vehicle photo: '.$title }}">@else<div class="placeholder">Vehicle photographs pending</div>@endif
 </div><div class="details">
 <p class="eyebrow">CARFOLK LTD · QUALITY &amp; AFFORDABILITY</p><h1>{{ $title }}</h1>
 <p class="status">{{ ucfirst($vehicle->status) }} · {{ $vehicle->body_type ?: 'Vehicle' }}</p>
