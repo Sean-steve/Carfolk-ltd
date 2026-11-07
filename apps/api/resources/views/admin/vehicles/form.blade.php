@@ -3,11 +3,36 @@
 @section('eyebrow','INVENTORY MANAGEMENT')
 @section('actions')<a class="btn btn-outline" href="{{ route('manage.vehicles.index') }}">← Back to inventory</a>@endsection
 @section('content')
- <p class="admin-intro">{{ $mode==='create'?'Create an accurate stock record, review the details and decide when it is ready for buyers.':'Update the vehicle listing, manage photos and keep the published availability accurate.' }}</p>
+ <p class="admin-intro">{{ $mode==='create'?'Create the vehicle record first, then add photographs in the clearly marked Photos step.':'Update the vehicle details or jump straight to the Photos step to manage the listing gallery.' }}</p>
+ <nav class="vehicle-stepper" aria-label="Vehicle setup">
+  <a class="vehicle-step vehicle-step--active" href="#vehicle-details" aria-label="Step 1: Vehicle details">
+   <span class="vehicle-step__number" aria-hidden="true">1</span><span><strong>Vehicle details</strong><small>{{ $mode==='create'?'Start here':'Saved · Edit anytime' }}</small></span>
+  </a>
+  @if($mode==='edit')
+   <a class="vehicle-step vehicle-step--ready" href="#vehicle-photos" aria-label="Step 2: Vehicle photos, {{ $vehicle->images->count() }} of 20 uploaded">
+    <span class="vehicle-step__number" aria-hidden="true">2</span><span><strong>Vehicle photos</strong><small>{{ $vehicle->images->count() }}/20 uploaded · Add or manage photos</small></span><span class="vehicle-step__arrow" aria-hidden="true">↓</span>
+   </a>
+  @else
+   <div class="vehicle-step vehicle-step--locked" aria-label="Step 2: Vehicle photos, available after saving">
+    <span class="vehicle-step__number" aria-hidden="true">2</span><span><strong>Vehicle photos</strong><small>Next · Available after saving</small></span>
+   </div>
+  @endif
+ </nav>
+ @if($mode==='edit')
+ <div class="vehicle-photo-callout" role="note">
+  <div><strong>Ready to add vehicle photos?</strong><p>You can upload photographs now without editing the vehicle details. The photo workspace is always visible in Step 2.</p></div>
+  <a class="btn btn-primary" href="#vehicle-photos">Go to photo upload ↓</a>
+ </div>
+ @else
+ <div class="vehicle-photo-callout" role="note">
+  <div><strong>Photo uploading is the next step.</strong><p>Save these details to create the vehicle, and we'll take you straight to the photo-upload section. Your listing can stay a draft until it's ready.</p></div>
+  <span class="vehicle-photo-callout__status">Step 2 ready after save</span>
+ </div>
+ @endif
  @if($mode==='edit')
  <div class="experience-summary-banner"><span class="pill {{ $vehicle->is_published?'pill-available':'pill-draft' }}">{{ $vehicle->is_published?'Published':'Draft' }}</span><strong>{{ $vehicle->make }} {{ $vehicle->model }} · {{ $vehicle->year }}</strong><small>{{ $vehicle->stock_reference }} · {{ ucfirst($vehicle->status) }}</small></div>
  @endif
- <form class="panel admin-edit" method="post" action="{{ $mode==='create'?route('manage.vehicles.store'):route('manage.vehicles.update',$vehicle) }}">
+ <form id="vehicle-details" class="panel admin-edit" method="post" action="{{ $mode==='create'?route('manage.vehicles.store'):route('manage.vehicles.update',$vehicle) }}">
   @csrf @if($mode==='edit')@method('PATCH')@endif
   <div class="panel-head"><span class="admin-kicker">STEP 1 · VEHICLE RECORD</span><h2>Vehicle details</h2><p>Start with the unique stock reference and the exact details supplied by Carfolk.</p></div>
   <div class="fields-grid">
@@ -39,21 +64,39 @@
   <p class="experience-footnote">* Required fields. Review descriptions, prices and availability before saving. If the listing is published, changes will be reflected in the public catalogue.</p>
   <div class="form-actions"><button type="submit" class="btn btn-primary">{{ $mode==='create'?'Create vehicle':'Save changes' }} →</button><a href="{{ route('manage.vehicles.index') }}" class="btn btn-outline">Cancel</a></div>
  </form>
- @if($mode==='edit')
- <section class="panel image-panel"><div class="panel-head"><span class="admin-kicker">STEP 2 · LISTING PHOTOGRAPHS</span><h2>Vehicle photos <small>({{ $vehicle->images->count() }}/20)</small></h2><p>Add clear, approved photos of this exact vehicle. The first uploaded image is used as the main photo.</p></div>
-  <div class="vehicle-images">
-   @forelse($vehicle->images as $image)
-   <div class="vehicle-image"><img src="{{ \Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" alt="{{ $image->alt_text??'Vehicle photograph' }}"><div class="vehicle-image__meta">@if($image->is_primary)<span class="pill pill-available">Primary</span>@endif<form method="post" action="{{ route('manage.vehicles.photos.remove',[$vehicle,$image]) }}">@csrf @method('DELETE')<button type="submit">Remove</button></form></div></div>
-   @empty <p class="empty">No photos yet. Add a front, rear and interior view when available and approved for use.</p>
-   @endforelse
+ <section id="vehicle-photos" class="panel image-panel vehicle-photo-section" aria-labelledby="vehicle-photo-title" tabindex="-1">
+  <div class="panel-head vehicle-photo-section__head">
+   <div><span class="admin-kicker">STEP 2 · LISTING PHOTOGRAPHS</span>
+    <h2 id="vehicle-photo-title">Vehicle photos @if($mode==='edit')<small>({{ $vehicle->images->count() }}/20)</small>@endif</h2>
+    <p>Add clear, approved photos of this exact vehicle. The first uploaded image is used as the main photo.</p>
+   </div>
+   @if($mode==='edit')<span class="vehicle-photo-section__badge">Photo upload available</span>
+   @else<span class="vehicle-photo-section__badge vehicle-photo-section__badge--pending">Save details to enable</span>@endif
   </div>
+  @if($mode==='edit')
+   <div class="vehicle-photo-instructions"><strong>Upload photographs here</strong><p>Select your photos below, then click <strong>Upload selected photos</strong>. You can come back to add or remove photos anytime.</p></div>
   <form class="photo-upload" method="post" enctype="multipart/form-data" action="{{ route('manage.vehicles.photos.add',$vehicle) }}" data-photo-upload data-existing-photos="{{ $vehicle->images->count() }}" data-server-file-limit="{{ ini_get('upload_max_filesize') }}" data-server-post-limit="{{ ini_get('post_max_size') }}">@csrf
    <label>Choose photos (up to 5 JPEG, PNG or WebP; 8 MB each)<input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required></label>
    <label>Alternative text<input name="alt_text" maxlength="200" placeholder="e.g. Front view of vehicle"></label>
    <button type="submit" class="btn btn-primary">Upload selected photos</button>
    <p class="flash flash-error photo-upload-error" data-upload-error tabindex="-1" role="alert" hidden></p>
   </form>
-  <p class="experience-footnote">Accepted: JPEG, PNG or WebP; up to 5 files per upload, 8 MB each, and 20 photos per vehicle. Only upload images Carfolk is allowed to publish.</p>
+
+   <h3 class="vehicle-photo-gallery-title">Uploaded photos <small>({{ $vehicle->images->count() }} of 20)</small></h3>
+  <div class="vehicle-images">
+   @forelse($vehicle->images as $image)
+   <div class="vehicle-image"><img src="{{ \Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" alt="{{ $image->alt_text??'Vehicle photograph' }}"><div class="vehicle-image__meta">@if($image->is_primary)<span class="pill pill-available">Primary</span>@endif<form method="post" action="{{ route('manage.vehicles.photos.remove',[$vehicle,$image]) }}">@csrf @method('DELETE')<button type="submit">Remove</button></form></div></div>
+   @empty <p class="empty">No photos yet. Add a front, rear and interior view when available and approved for use.</p>
+   @endforelse
+  </div>
+
+   <p class="experience-footnote">Accepted: JPEG, PNG or WebP; up to 5 files per upload, 8 MB each, and 20 photos per vehicle. Only upload images Carfolk is allowed to publish.</p>
+  @else
+   <div class="vehicle-photo-locked">
+    <strong>Your photo upload workspace is ready.</strong>
+    <p>First save the vehicle details above. You will automatically return to this section with the photo chooser enabled.</p>
+    <a class="btn btn-outline" href="#vehicle-details">Complete vehicle details ↑</a>
+   </div>
+  @endif
  </section>
- @endif
 @endsection
