@@ -38,11 +38,6 @@
     const maxBytes = Number.isFinite(options.maxBytes) ? Math.min(options.maxBytes, 8 * MiB) : 8 * MiB;
     const targetBytes = Math.min(DEFAULT_TARGET, Math.floor(maxBytes * 0.75));
     if (maxBytes <= 0 || targetBytes <= 0) throw new Error('This server does not permit photo uploads at its current PHP limit.');
-    // Small images already under the target stay unchanged, including transparent PNGs.
-    if (file.size <= targetBytes) {
-      return { file, originalBytes: file.size, outputBytes: file.size, optimized: false, dimensions: null };
-    }
-
     let bitmap = null;
     let loaded = null;
     try {
@@ -62,14 +57,15 @@
       if (!width || !height || width * height > MAX_SOURCE_PIXELS) {
         throw new Error('This image resolution is too large to process safely on this device (maximum 64 megapixels).');
       }
+      if (file.size <= targetBytes && Math.max(width, height) <= MAX_LONG_EDGE) {
+        return { file, originalBytes: file.size, outputBytes: file.size, optimized: false, dimensions: { width, height } };
+      }
       const ratio = Math.min(1, MAX_LONG_EDGE / Math.max(width, height));
       let edgeW = Math.max(1, Math.round(width * ratio));
       let edgeH = Math.max(1, Math.round(height * ratio));
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d', { alpha: true });
       if (!ctx) throw new Error('Your browser does not support image compression.');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
       let best = null;
       let bestWidth = edgeW;
       let bestHeight = edgeH;
@@ -78,6 +74,8 @@
       for (let scaleAttempt = 0; scaleAttempt < 3; scaleAttempt++) {
         canvas.width = edgeW;
         canvas.height = edgeH;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.clearRect(0, 0, edgeW, edgeH);
         ctx.drawImage(image, 0, 0, edgeW, edgeH);
         for (const quality of [0.84, 0.72, 0.58]) {
