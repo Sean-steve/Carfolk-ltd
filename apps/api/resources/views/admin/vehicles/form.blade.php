@@ -103,7 +103,7 @@
    @forelse($vehicle->images as $image)
     <article class="vehicle-image vehicle-image--manage" data-image-id="{{ $image->id }}" draggable="true" aria-label="Vehicle photo {{ $loop->iteration }}">
      <div class="vehicle-image__visual">
-      <img src="{{ \App\Support\VehicleImageVariants::urlFor($image,'card')??\Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" alt="{{ $image->alt_text??('Photo '.$loop->iteration.' of this vehicle') }}">
+      <img src="{{ \App\Support\VehicleImageVariants::urlFor($image,'card')??\Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" data-original-src="{{ \Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" onerror="this.onerror=null; if (this.dataset.originalSrc && this.src !== this.dataset.originalSrc) this.src=this.dataset.originalSrc;" alt="{{ $image->alt_text??('Photo '.$loop->iteration.' of this vehicle') }}">
       @if($image->is_primary)<span class="pill pill-available vehicle-image__primary">Main photo</span>@endif
       <span class="vehicle-image__position">Photo {{ $loop->iteration }}</span>
      </div>

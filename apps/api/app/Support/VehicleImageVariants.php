@@ -39,6 +39,10 @@ final class VehicleImageVariants
 
     public static function urlFor(VehicleImage $image, string $variant): ?string
     {
+        // A generated file existing on disk doesn't guarantee LiteSpeed will
+        // serve it through /storage. Until verified, never advertise variants:
+        // clients will use the original, known-working image URL instead.
+        if (!config('carfolk.image_variants_enabled', false)) return null;
         if ($image->disk !== 'public') return null;
         $path = self::pathFor($image->path, $variant);
         if ($path === null || !Storage::disk('public')->exists($path)) return null;
