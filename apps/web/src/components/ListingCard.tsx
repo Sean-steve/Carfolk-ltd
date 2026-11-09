@@ -10,7 +10,7 @@ export function ListingCard({car,onLimit}:{car:Vehicle;onLimit:()=>void}){
  const cover=car.images.find(image=>image.is_primary)??car.images[0];
  return <article className="listing-card">
   <div className="listing-card__photo">
-   <a href={toCar(car.slug)} aria-label={'View '+vehicleName(car)}><PreviewPhoto src={cover?.card_url||cover?.url||''} alt={cover?.alt_text||'Photo of '+vehicleName(car)}/></a>
+   <a href={toCar(car.slug)} aria-label={'View '+vehicleName(car)}><PreviewPhoto src={cover?.card_url||cover?.url||''} fallbackSrc={cover?.url??''} alt={cover?.alt_text||'Photo of '+vehicleName(car)}/></a>
    <span className="listing-card__demo">{car.status==='available'?'AVAILABLE':car.status.toUpperCase()}</span>
    {car.condition&&<span className="listing-card__condition">{car.condition}</span>}
   </div>
