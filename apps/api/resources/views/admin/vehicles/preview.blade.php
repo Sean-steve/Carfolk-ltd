@@ -43,7 +43,7 @@
   <div class="buyer-preview__gallery">
    <div class="buyer-preview__cover">
     @if($cover)
-     <img src="{{ \App\Support\VehicleImageVariants::urlFor($cover,'detail')??\Illuminate\Support\Facades\Storage::disk($cover->disk)->url($cover->path) }}" alt="{{ $cover->alt_text??($vehicle->make.' '.$vehicle->model.' main photograph') }}">
+     <img src="{{ \App\Support\VehicleImageVariants::urlFor($cover,'detail')??\Illuminate\Support\Facades\Storage::disk($cover->disk)->url($cover->path) }}" data-original-src="{{ \Illuminate\Support\Facades\Storage::disk($cover->disk)->url($cover->path) }}" onerror="this.onerror=null; if (this.dataset.originalSrc && this.src !== this.dataset.originalSrc) this.src=this.dataset.originalSrc;" alt="{{ $cover->alt_text??($vehicle->make.' '.$vehicle->model.' main photograph') }}">
      <span class="buyer-preview__cover-label">Main photo · 1 of {{ $photos->count() }}</span>
     @else
      <div class="buyer-preview__empty">Photos have not been added yet. Upload approved photographs before publishing.</div>
