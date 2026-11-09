@@ -53,7 +53,7 @@
     <div class="buyer-preview__thumbs" aria-label="Vehicle gallery, {{ $photos->count() }} photos">
      @foreach($photos as $photo)
       <figure @class(['buyer-preview__thumb','buyer-preview__thumb--main'=>$photo->id===$cover->id])>
-       <img src="{{ \App\Support\VehicleImageVariants::urlFor($photo,'thumb')??\Illuminate\Support\Facades\Storage::disk($photo->disk)->url($photo->path) }}" alt="{{ $photo->alt_text??('Photo '.$loop->iteration.' of '.$vehicle->make.' '.$vehicle->model) }}" loading="lazy">
+       <img src="{{ \App\Support\VehicleImageVariants::urlFor($photo,'thumb')??\Illuminate\Support\Facades\Storage::disk($photo->disk)->url($photo->path) }}" data-original-src="{{ \Illuminate\Support\Facades\Storage::disk($photo->disk)->url($photo->path) }}" onerror="this.onerror=null; if (this.dataset.originalSrc && this.src !== this.dataset.originalSrc) this.src=this.dataset.originalSrc;" alt="{{ $photo->alt_text??('Photo '.$loop->iteration.' of '.$vehicle->make.' '.$vehicle->model) }}" loading="lazy">
        <figcaption>{{ $loop->iteration }}@if($photo->is_primary) · Main @endif</figcaption>
       </figure>
      @endforeach
