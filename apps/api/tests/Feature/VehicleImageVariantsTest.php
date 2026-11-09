@@ -15,6 +15,35 @@ final class VehicleImageVariantsTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // The production kill switch defaults to false; explicitly enable
+        // optimized URL delivery for the variant feature tests.
+        config()->set('carfolk.image_variants_enabled', true);
+    }
+
+    public function test_variant_urls_are_disabled_by_default_and_originals_remain_available(): void
+    {
+        $this->requireWebp();
+        Storage::fake('public');
+        $car = $this->car();
+        $image = $this->photo($car);
+        VehicleImageVariants::generate($image);
+
+        config()->set('carfolk.image_variants_enabled', false);
+        $this->assertNull(VehicleImageVariants::urlFor($image, 'thumb'));
+        $response = $this->getJson('/api/v1/vehicles/'.$car->slug)->assertOk();
+        $response->assertJsonPath('data.images.0.thumbnail_url', null);
+        $response->assertJsonPath('data.images.0.card_url', null);
+        $response->assertJsonPath('data.images.0.detail_url', null);
+        $response->assertJsonPath('data.images.0.url', Storage::disk('public')->url($image->path));
+
+        // Switching the flag back on does not require new derivative files.
+        config()->set('carfolk.image_variants_enabled', true);
+        $this->assertNotNull(VehicleImageVariants::urlFor($image, 'thumb'));
+    }
+
     private function car(): Vehicle
     {
         return Vehicle::create([
