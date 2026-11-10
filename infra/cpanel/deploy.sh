@@ -64,9 +64,16 @@ sync_api_code() {
       rm -rf -- "$entry"
     done
   )
-  # Preserve runtime directories and never extract files from old live storage.
+  # Keep the existing API directory metadata while extracting the staged
+  # archive. cPanel stages are created with umask 077, so the archive's "."
+  # entry has mode 700. Plain tar -xf applies that 700 mode to the live API
+  # root and LiteSpeed can no longer follow public_html/storage -> API/storage,
+  # causing all customer photos to 404. This applies to rollback as well.
   (cd "$source" && tar --exclude='./.env*' --exclude='./storage' --exclude='./bootstrap/cache' -cf - .) \
-    | (cd "$destination" && tar -xf -)
+    | (cd "$destination" && tar --no-overwrite-dir -xf -)
+  # Allow traversal, not listing, of this private code parent. This does not
+  # change .env, photos or any nested private file or directory permissions.
+  chmod 711 "$destination"
 }
 
 # The private deployer uses umask 077 for credentials and backups. Files copied
