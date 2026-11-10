@@ -183,6 +183,26 @@ grep -q 'data-gallery-sort' "$STAGE/admin-photo-gallery.js"
 for endpoint in /up /api/v1/site /api/v1/vehicles /manage/login; do
   curl --fail --silent --show-error --max-time 20 --output /dev/null "$ORIGIN$endpoint"
 done
+# Catch the exact production regression that caused existing photo records to
+# show placeholders: a 200 vehicle API response with 404 original photo URLs.
+# Use a first-page sample when available. Do not contact untrusted URL origins.
+SAMPLE_ORIGINAL="$(curl --fail --silent --show-error --max-time 20 "$ORIGIN/api/v1/vehicles" \
+  | php -r '$data=json_decode(stream_get_contents(STDIN),true); foreach(($data["data"]??[]) as $car){ foreach(($car["images"]??[]) as $img){ if(!empty($img["url"])){echo $img["url"]; exit;} } }')"
+if [[ -n "$SAMPLE_ORIGINAL" ]]; then
+  case "$SAMPLE_ORIGINAL" in
+    "$ORIGIN"/storage/vehicles/*) ;;
+    *) echo 'Invalid vehicle image origin in live API' >&2; exit 1 ;;
+  esac
+  sample_type="$(curl --fail --silent --show-error --max-time 20 \
+    --output /dev/null --write-out '%{content_type}' "$SAMPLE_ORIGINAL")"
+  [[ "$sample_type" == image/* ]] || {
+    echo "Original vehicle photo returned unexpected type: $sample_type" >&2
+    exit 1
+  }
+  echo 'Live vehicle photo HTTP check passed.'
+else
+  echo 'No published vehicle photo in first API page; photo HTTP check skipped.'
+fi
 printf '%s\n' "$RELEASE_ID" > "$STATE/deployed-release"
 printf '%s\n' "$SOURCE" > "$STATE/deployed-source"
 echo "DEPLOYED: $SOURCE (release $RELEASE_ID)"
