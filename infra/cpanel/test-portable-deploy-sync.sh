@@ -8,6 +8,10 @@ API="$tmp/live-api"
 stage="$tmp/stage-api"
 snapshot="$tmp/snapshot-api"
 mkdir -p "$API"/{app,storage/app/public,bootstrap/cache,public/js} "$stage"/{app,storage/app/public,bootstrap/cache,public/js} "$snapshot"
+# Reproduce HostPinnacle: live API must stay traversable (711), but tar
+# archives originate in private staging/backup directories with mode 700.
+chmod 711 "$API"
+chmod 700 "$stage" "$snapshot"
 printf 'LIVE-ONLY-SECRET\n' > "$API/.env"
 printf 'user-photo-content\n' > "$API/storage/app/public/photo.jpg"
 printf 'keep-me\n' > "$API/bootstrap/cache/config.php"
@@ -44,6 +48,10 @@ source "$tmp/sync.sh"
 (cd "$API" && tar --exclude='./.env*' --exclude='./storage' --exclude='./bootstrap/cache' -cf - .) \
   | (cd "$snapshot" && tar -xf -)
 sync_api_code "$stage" "$API"
+[[ "$(stat -c '%a' "$API")" == 711 ]] || {
+  echo 'Live API lost LiteSpeed traversal after the release sync' >&2
+  exit 1
+}
 
 [[ "$(cat "$API/.env")" == LIVE-ONLY-SECRET ]]
 [[ "$(cat "$API/storage/app/public/photo.jpg")" == user-photo-content ]]
@@ -61,6 +69,10 @@ sync_api_code "$stage" "$API"
 
 # Rollback replaces managed code, without touching any runtime data.
 sync_api_code "$snapshot" "$API"
+[[ "$(stat -c '%a' "$API")" == 711 ]] || {
+  echo 'Live API lost LiteSpeed traversal after rollback' >&2
+  exit 1
+}
 [[ "$(cat "$API/app/Old.php")" == old-version ]]
 [[ "$(cat "$API/bootstrap/old.php")" == old-bootstrap ]]
 [[ "$(cat "$API/public/js/old.js")" == old-js ]]
